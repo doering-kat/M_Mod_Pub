@@ -1,4 +1,5 @@
 # Header -----------------------------------------------------------------------
+
 # Clean Fall Survey Data 
 # 
 # This script takes the spreadsheets from the relational fall survey database
@@ -52,26 +53,27 @@ if(any(!(tows$ReportingUnitValue %in% c(1, 0.5) ) )){
 }
 
 # Select columns for counts
-cnt_col_names <- tows %>% 
+num_col_names <- tows %>% 
                    select(starts_with("Num")) %>% 
                    colnames()
 
-# loop through the columns to iteratively change 
+# loop through the columns to iteratively change all data to be in half bushels
 tows_half_bu <- tows
-for (n in cnt_col_names){ # loop through to change
+for (n in num_col_names){ # loop through to change
   # note that n is the current column name (we are overwriting it)
   tows_half_bu <- mutate(tows_half_bu, 
                          !! n := ifelse(ReportingUnitValue == 1, 
-                                             (!! rlang::sym(n))/2,  # divide 1 MD bushel values by 2
-                                             (!! rlang::sym(n))) # otherwise, keep value
+                                             (!! rlang::sym(n))/2, # divide 1 MD bushel values by 2
+                                    ifelse(ReportingUnitValue == 0.5, # keep value if half bushel
+                                             (!! rlang::sym(n)), NA))  #Any other inputs result in NA
                          )
 }
 
-# Add a new reporting unit column, and rename the ReportingUnit and ReoportingUnitValue Columns
+# Add a new reporting unit  value column, and rename the ReportingUnit and ReoportingUnitValue Columns
 tows_half_bu <- tows_half_bu %>% 
                   rename(OldReportingUnit = ReportingUnit) %>% 
                   rename(OldReportingUnitValue = ReportingUnitValue) %>% 
-                  mutate(CurrentReportingUnitValue = 0.5)
+                  mutate(CurrentReportingUnitValue = 0.5) #everything is in half bushels
 
 # write new data ---------------------------------------------------------------
 write.csv(tows_half_bu, paste0(der_dat_spec_path,"/fall_survey_half_bu.csv"), row.names = FALSE)
