@@ -59,8 +59,10 @@ NOAA_list_init <- sort(unique(dat$NOAACode)) #make all the NOAA codes the initia
 yr_0 <- 1990
 yr_last <- 2017
 
+# min number of bars with complete time series a bar needs to be included in the model
+n_ts <- 2
 
-#-------------------------------------------------------------------------------
+# Modify data ------------------------------------------------------------------
 # Select the complete timeseries of data to use. 
 all_dat_ts <- DataSelection(
     dat = dat, 
@@ -68,15 +70,42 @@ all_dat_ts <- DataSelection(
     yr_0 = yr_0, 
     yr_last = yr_last, 
     remove_0 = FALSE,
-    n_ts = 2 #min number of bars with complete time series required. 
+    n_ts = n_ts #min number of bars with complete time series required. 
 )
-# Check that subset correctly
+
+all_dat_ts <- DataSelection(
+  dat = dat, 
+  NOAA_list = NOAA_list_init, 
+  yr_0 = yr_0, 
+  yr_last = yr_last, 
+  remove_0 = TRUE,
+  n_ts = 4 #min number of bars with complete time series required. 
+)
+
+# Check that subset correctly - should be no NOAACodes with < n_ts.
+
+test <- all_dat_ts %>%
+    select(NOAACode, ID) %>%
+    distinct() %>%
+    group_by(NOAACode) %>%
+    count()
+test <- any(test$n < n_ts) #Should return FALSE.
+if(test == TRUE){
+  stop("DataSelection did not subset correctly; dataframe includes NOAAcodes with too few bars to be included.")
+}
+#     
+#  #second test: check that there are no bars without complete time series.
+test_2 <- all_dat_ts %>% 
+            select(ID,SampleYr) %>% 
+            distinct() %>%  # to get bar/year combos included
+            group_by(ID) %>% 
+            count()
 # 
-# test <- all_dat_ts %>%
-#     select(NOAACode, ID) %>%
-#     distinct() %>%
-#     group_by(NOAACode) %>%
-#     count()
+test_2 <- any(!(test_2$n == (yr_last - yr_0 + 1))) # expect to return FALSE.
+
+if(test == TRUE){
+  stop("Dataselection did not subset correctly: wrong number of years")
+}
 
 
 NOAA_list <- sort(unique(all_dat_ts$NOAACode)) #some noaa codes may be eliminated.

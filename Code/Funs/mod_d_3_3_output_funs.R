@@ -1,97 +1,121 @@
+# Header ----------------------------------------------------------------------
+
 # Functions to manipulate data from the fall dredge survey into a form that can
 # be run by the model, and make some diagnostic plots. 
-#-------------------------------------------------------------------------------
-# Function 1: Data Selection. Select only datas in NOAA codes specified that have
-# bars with a complete time series
+# Contains 3 functions
+# Written by KD
 
-#inputs are dat, the fall survey data, NOAA_list, a vector containing the NOAA 
-#codes of interest (some may not have sufficient data, though), the year 0 for 
-# the model, the last year of the model, if observations of boxes and live oysters
-# where both are 0 should be removed, the minimum number of bars the time series
-# must have to be included. 
-DataSelection <- function(dat, NOAA_list, yr_0, yr_last, remove_0 = FALSE, n_ts = 2){
+# Function 1: Data Selection ---------------------------------------------------
+
+# Select only datas in NOAA codes specified that have bars with a complete time 
+# series
+
+# inputs are:
+# dat, the fall survey data, (dataframe) 
+# NOAA_vec, a vector containing the NOAA  codes of interest (some may not have sufficient data, though),
+# yr_0, the year 0 for the model, an integer
+# yr_last, the last year of the model, an integer
+# remove_0, true if observations of boxes and live oysters  where both are 0 should be removed, logical
+# n_ts, the minimum number of bars the time series must have to be included, an integer
+
+# output is all_dat_ts, a dataframe containing data for bars wit a complete time series
+
+DataSelection <- function(dat, NOAA_vec, yr_0, yr_last, remove_0 = FALSE, n_ts = 2) {
+  
     require(dplyr)
-    n_yr_tot <- yr_last-yr_0+1 # Select only bars that have a COMPLETE time series.
-    # Data Selection
+    n_yr_tot <- yr_last-yr_0+1 # calc total number of years, including yr_0
     
-    # #vector containting the number of bars by NOAA code to fill in 
-    # n_bars <- rep(0, length.out = length(NOAA_list))
-    # #matix containing the number of observations by year NOAA code to fill in 
-    # n_obs_by_yr <- matrix(0, nrow = (yr_last - yr_0 + 1), ncol = length(NOAA_list)) #to fill in
+    #Check Inputs --------------------------------------------------------------
     
-    # Select to observations to set up the data frame. These are flagged and will be
-    # deleted after selecting data. 
-    all_dat_ts <- dat[1:2,] %>% 
-        select(SampleEvent, RepEvent, ID, SampleYr, NOAACode, NumMrktLive, 
-               NumSmllLive, NumMrktAllBox, NumSmllAllBox) #will delete these two obs later
-    all_dat_ts$ID <- c("to delete", "to delete") #to flag to delete later
+    # Only some basic checks, does not make function completely foolproof.
+    #make sure the number of years is at least 2
+    if(n_yr_tot < 2) stop(paste0("Number of years is ", n_yr_tot,", which is too few. Check yr_last and yr_0."))
+    # check dat is a dataframe
+    if(!is.data.frame(dat)) stop("dat must be a dataframe.")
+    # check NOAA_vec is a vector of integers.
+    if((!is.vector(NOAA_vec))|(!is.integer(NOAA_vec))) stop("NOAA_vec must be a vector of integers.")
+    # check that n_ts is an integer
+    if(!is.integer(n_ts)) stop("n_ts must be an integer.")
     
-    # Select data and fill in n_bars, n_obs_by_yr, and all_dat_ts by looping over 
-    # NOAA codes.
-    for (i in 1:length(NOAA_list)){
-        #find which bars have at least n_yr_tot years of data. These bars (in vector
-        # called bars) will be included in the analysis
+    # Data Selection -----------------------------------------------------------
+    # 
+    # remove observations where both live and box counts are zero, if specified.
+    if(remove_0 == TRUE){ 
+      dat <- dplyr::filter(dat, 
+        ((NumMrktLive+NumSmllLive)>0|(NumMrktAllBox+NumSmllAllBox)>0))
+    }
+    
+    # Select data by looping through NOAA codes
+    all_dat_ts <- data.frame() # data.frame to fill in.
+    for (i in 1:length(NOAA_vec)){ 
+      
+        # For the NOAA code, find which bars have at least n_yr_tot years of data. 
+        # These bars (in vector called bars) will be included in the analysis
         bars <- dat %>% 
-            filter(NOAACode == NOAA_list[i]) %>% 
-            filter(SampleYr >= yr_0, SampleYr <= yr_last) %>% 
-            select(ID, SampleYr, NOAACode, NumMrktLive, NumSmllLive, NumMrktAllBox, NumSmllAllBox) %>% 
+            dplyr::filter(NOAACode == NOAA_vec[i]) %>% 
+            dplyr::filter(SampleYr >= yr_0, SampleYr <= yr_last) %>% 
+            dplyr::select(ID, SampleYr, NOAACode, NumMrktLive, NumSmllLive, NumMrktAllBox, NumSmllAllBox) %>% 
             na.omit() %>%  #remove any samples that have NA's in any of the necessary columns selected above
-            select(ID, SampleYr) %>% #only want these to count number of years for each ID
-            distinct() %>%  #remove duplicates
-            count(ID) %>%  #number of years for each ID
-            filter(n == n_yr_tot) %>%  #select only bars with a complete time series
-            select(ID)
+            dplyr::select(ID, SampleYr) %>% #only want these to count number of years for each ID
+            dplyr::distinct() %>%  #remove duplicates
+            dplyr::count(ID) %>%  #number of years for each ID
+            dplyr::filter(n == n_yr_tot) %>%  #select only bars with a complete time series
+            dplyr::select(ID)
         
-        # if (nrow(bars) == 0) {
-        #     n_bars[i] <- 0
-        #     next #go to next iteration of for loop if nothing else to calculate
-        # }
         if (nrow(bars) < n_ts){
             next #go to next iteration of for loop if nothing else to calculate
         }
+        
         #Extract bars and data columns needed (all numbers are standardized per 1/2 bu)
-        dat_ts <- dat %>% 
-            filter(SampleYr >= yr_0, SampleYr <= yr_last) %>%
-            filter(ID %in% bars$ID) %>% #subset only the bars n_yr_tot of data.
-            select(SampleEvent, RepEvent, ID, SampleYr, NOAACode, NumMrktLive, 
+        tmp_dat_ts <- dat %>% 
+            dplyr::filter(SampleYr >= yr_0, SampleYr <= yr_last) %>%
+            dplyr::filter(ID %in% bars$ID) %>% #subset only the bars n_yr_tot of data.
+            # select only relavent columns for the model
+            dplyr::select(SampleEvent, RepEvent, ID, SampleYr, NOAACode, NumMrktLive, 
                    NumSmllLive, NumMrktAllBox, NumSmllAllBox) %>% 
-            na.omit()
+            na.omit() # remove any na's in the dataframe
         
         #save the data set for each bar in 1 dataframe.
-        all_dat_ts <- bind_rows(all_dat_ts, dat_ts)
-        
-    #     #Calculate number of samples by year for the NOAA code
-    #     tmp_n_obs <- dat_ts %>% 
-    #         group_by(SampleYr) %>% 
-    #         count() %>% 
-    #         arrange(SampleYr)
-    #     #Save number of bars with complete series
-    #     n_bars[i] <- length(bars$ID)
-    #     #save n_obs_by_yr (noaa code on top of data frame, each row represents a yr)
-    #     if(nrow(tmp_n_obs)==0){
-    #         n_obs_by_yr[,i] <- 0
-    #         next
-    #     }
-    #     n_obs_by_yr[,i] <- tmp_n_obs$n
+        all_dat_ts <- dplyr::bind_rows(all_dat_ts, tmp_dat_ts)
     }
-
-    #delete 2 rows used to intialize dataframe
-    all_dat_ts <-  all_dat_ts %>% 
-        filter(ID != "to delete")
     
-    # calculate for all the data the total number of adult lives and total number of
-    # adult-sized boxes. 
-    all_dat_ts <- all_dat_ts %>% mutate(L = NumMrktLive + NumSmllLive) %>% 
-        mutate(B = NumMrktAllBox + NumSmllAllBox)
+    # calculate for all the data the total number of adult lives and total 
+    # number of adult-sized boxes. 
+    all_dat_ts <- all_dat_ts %>% 
+                    dplyr::mutate(L = NumMrktLive + NumSmllLive) %>% 
+                    dplyr::mutate(B = NumMrktAllBox + NumSmllAllBox)
     
-    if(remove_0 == TRUE){
-        all_dat_ts <- all_dat_ts %>% filter(L>0|B>0)
+  # Check subsetting -----------------------------------------------------------
+  # Test 1 : there are no NOAACodes with < n_ts
+    test <- all_dat_ts %>%
+      dplyr::select(NOAACode, ID) %>%
+      dplyr::distinct() %>%
+      dplyr::group_by(NOAACode) %>%
+      dplyr::count()
+    test <- any(test$n < n_ts) #Should return FALSE.
+    if(test == TRUE){
+      stop("DataSelection did not subset correctly; dataframe includes NOAAcodes with too few bars to be included.")
     }
+    
+    #  Test 2: check that there are no bars without complete time series.
+    test_2 <- all_dat_ts %>% 
+      dplyr::select(ID,SampleYr) %>% 
+      dplyr::distinct() %>%  # to get bar/year combos included
+      dplyr::group_by(ID) %>% 
+      dplyr::count()
+    # 
+    test_2 <- any(!(test_2$n == (yr_last - yr_0 + 1))) # expect to return FALSE.
+    
+    if(test == TRUE){
+      stop("Dataselection did not subset correctly: wrong number of years in some NOAA codes")
+    }
+    
+    # Return dataframe ---------------------------------------------------------
     return(all_dat_ts)
 }
 
 
-#-------------------------------------------------------------------------------
+# Function 2: Plot Data --------------------------------------------------------
 # Explore data set to make sure it subset correctly.
 # inputs required are a time series of complete bars (output from DataSelection
 # function, folder name (must exist), and file name of the pdf that is being 
@@ -109,28 +133,28 @@ MakeDataPlots <- function(all_dat_ts, folder_name, file_name) {
     # ggplot(all_dat_ts, aes(ID,SampleYr))+
     #     geom_count() #sampling by year and ID>
     #By NOAA code
-    for (i in 1:length(NOAA_list)){ #Loop over NOAA codes.
-        print(ggplot(all_dat_ts[all_dat_ts$NOAACode == NOAA_list[i],], aes(ID)) +
+    for (i in 1:length(NOAA_vec)){ #Loop over NOAA codes.
+        print(ggplot(all_dat_ts[all_dat_ts$NOAACode == NOAA_vec[i],], aes(ID)) +
             geom_bar()+#Total number of samples by bar. (May need to add title with NOAA code?)
-            ggtitle(paste("Number of samples by bar, NOAA Code", NOAA_list[i])))
-        print(ggplot(all_dat_ts[all_dat_ts$NOAACode == NOAA_list[i],], aes(x =ID,y =SampleYr))+
+            ggtitle(paste("Number of samples by bar, NOAA Code", NOAA_vec[i])))
+        print(ggplot(all_dat_ts[all_dat_ts$NOAACode == NOAA_vec[i],], aes(x =ID,y =SampleYr))+
             geom_count()+# Number of samples by year and ID>
-            ggtitle(paste("Number of samples by year and bar, NOAA Code", NOAA_list[i])))
+            ggtitle(paste("Number of samples by year and bar, NOAA Code", NOAA_vec[i])))
         
-        tmp_count <- all_dat_ts %>% filter(NOAACode == NOAA_list[i]) %>%
+        tmp_count <- all_dat_ts %>% filter(NOAACode == NOAA_vec[i]) %>%
             group_by(ID, SampleYr) %>%
             count() #count the number of samples in each year and bar
         #plot the number of samples in each year and bar
         print(ggplot(tmp_count, aes(x=SampleYr, y=n))+
             geom_col()+
             facet_wrap(~ID)+
-            ggtitle(paste("Number of samples by bar, NOAA Code", NOAA_list[i])))
+            ggtitle(paste("Number of samples by bar, NOAA Code", NOAA_vec[i])))
     }
     dev.off()
     #not there are no variables returned from making these plots. 
 }
 
-#-------------------------------------------------------------------------------
+# Function 3: Create list of data for model ------------------------------------
 #Next section: modified from M_Probability model/code/stan/mod_d/d_1/mod_d_1_6_real_dat_1.R.
 #modified for the data structure of model_d_3_1.stan.
 # R_q: value for ratio of catchability
@@ -142,8 +166,8 @@ CreateModDataList <- function(all_dat_ts, R_q = 1.68, calc_log_r_p = T,
     require(dplyr)
     #put data for each NOAA code into its own component in a list. 
     dat_list <- list() #create a blank list to explore the
-    for (i in 1:length(NOAA_list)){
-        dat_list[[i]] <- all_dat_ts %>% filter(NOAACode == NOAA_list[i]) %>% arrange(SampleYr) %>% arrange(ID)
+    for (i in 1:length(NOAA_vec)){
+        dat_list[[i]] <- all_dat_ts %>% filter(NOAACode == NOAA_vec[i]) %>% arrange(SampleYr) %>% arrange(ID)
     }
     
     #Data for Years
@@ -171,7 +195,7 @@ CreateModDataList <- function(all_dat_ts, R_q = 1.68, calc_log_r_p = T,
     obs_each_0   <- list()
     n_obs_each_0 <- list()
     tmp_ModBar_max <- 0
-    for (i in 1:length(NOAA_list)){
+    for (i in 1:length(NOAA_vec)){
         #bar key
         tmp_bar_list <- unique(dat_list[[i]]$ID) # Not sure if this will subset correctly?
         I_each[[i]] <- length(tmp_bar_list) #number of bars
@@ -203,12 +227,12 @@ CreateModDataList <- function(all_dat_ts, R_q = 1.68, calc_log_r_p = T,
     
     #-------------------------------------------------------------------------------
     #Now, put data together for all bars:
-    REG <- length(NOAA_list) #number of regions
+    REG <- length(NOAA_vec) #number of regions
     #First iteration
     I <- I_each[[1]]
     obs <- obs_each[[1]]
     obs_0 <- obs_each_0[[1]]
-    for (i in 2:length(NOAA_list)){
+    for (i in 2:length(NOAA_vec)){
         I <- c(I,I_each[[i]]) #number of bars in each region.
         obs <- rbind(obs,obs_each[[i]])
         obs_0 <- rbind(obs_0, obs_each_0[[i]])
@@ -218,19 +242,19 @@ CreateModDataList <- function(all_dat_ts, R_q = 1.68, calc_log_r_p = T,
     n_obs_0 <- nrow(obs_0)
     
     I_REG <- rep(1, times = I[1])#first iteration
-    for (i in 2:length(NOAA_list)){
+    for (i in 2:length(NOAA_vec)){
         I_REG <- c(I_REG, rep(i, times = I[i]))
     }
     
     #Make sure to keep track of bars and the region they are from
-    for (i in 1:length(NOAA_list)){
+    for (i in 1:length(NOAA_vec)){
     bar_key_each[[i]]$ModReg <- rep(i, length.out = nrow(bar_key_each[[i]]))
-    bar_key_each[[i]]$NOAACode <- rep(NOAA_list[i], length.out = nrow(bar_key_each[[i]]))
+    bar_key_each[[i]]$NOAACode <- rep(NOAA_vec[i], length.out = nrow(bar_key_each[[i]]))
     }
     
     #Bind rows
     bar_key <- bar_key_each[[1]]
-    for (i in 2:length(NOAA_list)){
+    for (i in 2:length(NOAA_vec)){
         bar_key <- bind_rows(bar_key,bar_key_each[[i]])
     }
     
@@ -244,11 +268,11 @@ CreateModDataList <- function(all_dat_ts, R_q = 1.68, calc_log_r_p = T,
     logmeanB <- mean(log(obs[,'B']+0.01)) #rough mean for prior on Beta.
     #rough priors (could change them to be region specific, but not meant to be that informative.)
     if (calc_log_r_p == T){ # change if want to calculate them from data. 
-        log_lambda_r_p <- matrix(rep(c(logmeanL,5), times = length(NOAA_list)), nrow = length(NOAA_list), ncol = 2, byrow = T)
-        log_beta_0_r_p <- matrix(rep(c(logmeanB,5), times = length(NOAA_list)), nrow = length(NOAA_list), ncol = 2, byrow = T)
+        log_lambda_r_p <- matrix(rep(c(logmeanL,5), times = length(NOAA_vec)), nrow = length(NOAA_vec), ncol = 2, byrow = T)
+        log_beta_0_r_p <- matrix(rep(c(logmeanB,5), times = length(NOAA_vec)), nrow = length(NOAA_vec), ncol = 2, byrow = T)
     } else{
-        log_lambda_r_p <- matrix(rep(c(log_lambda_r_p,5), times = length(NOAA_list)), nrow = length(NOAA_list), ncol = 2, byrow = T)
-        log_beta_0_r_p <- matrix(rep(c(log_beta_0_r_p,5), times = length(NOAA_list)), nrow = length(NOAA_list), ncol = 2, byrow = T)
+        log_lambda_r_p <- matrix(rep(c(log_lambda_r_p,5), times = length(NOAA_vec)), nrow = length(NOAA_vec), ncol = 2, byrow = T)
+        log_beta_0_r_p <- matrix(rep(c(log_beta_0_r_p,5), times = length(NOAA_vec)), nrow = length(NOAA_vec), ncol = 2, byrow = T)
     }
     
     
@@ -280,7 +304,7 @@ CreateModDataList <- function(all_dat_ts, R_q = 1.68, calc_log_r_p = T,
     # create a list of the "raw_mod_dat", essentially the model in flat form that
     # may be easier to manipulate for later plotting.
     raw_mod_dat <- dat_list[[1]]
-    for (i in 2:length(NOAA_list)){
+    for (i in 2:length(NOAA_vec)){
         raw_mod_dat <- bind_rows(raw_mod_dat, dat_list[[i]])
     }
     #-------------------------
