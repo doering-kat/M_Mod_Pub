@@ -13,7 +13,7 @@
 # Written 9 Jan 2019 by Kathryn Doering
 # 
 # Load Packages and set options ------------------------------------------------
-
+# packages
 library(tidyverse)
 library(rstan)
 #R stan options
@@ -27,11 +27,8 @@ options(stringsAsFactors = F)
 #custom R functions.
 source("./Code/Funs/mod_d_3_3_output_funs.R", echo = F)
 
-# Modify params here -----------------------------------------------------------
-# TODO: Add code here, or delete section
-
 # Specify and Create output paths ----------------------------------------------
-# 
+
 # general derived data for all base model run scripts:
 der_dat_gen_path <- "./Derived_Data/2_Base_Mod_Run"
 # subfolder for this script:
@@ -53,7 +50,7 @@ dat <-  read.csv("./Derived_Data/1_Clean_Data/1_Clean_Fall_Survey/fall_survey_ha
 
 #CHANGE NOAA codes here- want all possible NOAA codes
 NOAA_list_init <- sort(unique(dat$NOAACode)) #make all the NOAA codes the initial
-#list.
+#list. (some will be deleted if the don't have sufficient data.)
 
 # Stick with these years to run the model due to the data available
 yr_0 <- 1990
@@ -74,9 +71,6 @@ all_dat_ts <- SelectData(
     n_ts = n_ts #min number of bars with complete time series required. 
 )
 
-
-NOAA_list <- sort(unique(all_dat_ts$NOAACode)) #some noaa codes may be eliminated.
-
 # Make diagnostic plots (note: takes ~ 30 s to run)
 PlotData(all_dat_ts = all_dat_ts, file_path = fig_spec_path, file_name = "Data_Plots.pdf")
 
@@ -84,52 +78,23 @@ PlotData(all_dat_ts = all_dat_ts, file_path = fig_spec_path, file_name = "Data_P
 output <- CreateModDataList(all_dat_ts = all_dat_ts)
 mod_dat <- output$mod_dat
 
-#Check the model data before proceeding to make sure R has been changed. 
-#-------------------------------------------------------------------------------
-
-#run model
+# Run model---------------------------------------------------------------------
 
 mod_1 <- stan(
-    file = './Code/model_d_3_3.stan', #will this fversion still work?
-    iter = 4000, #Started with 4000 iterations based on runs in TS and CHoptank
-    data = mod_dat,
-    seed = 123, #or set at the top? Only can set 1 X per R session, I think.
-    #init = inits,
-    #control = list(adapt_delta = 0.99), #added because of divergent transitions.
-    chains = 3
-)
+               file = './Code/model_d_3_3.stan',
+               iter = 4000, #Started with 4000 iterations based on info from previous runs
+               data = mod_dat,
+               seed = my_seed,
+              #init = inits,
+           #control = list(adapt_delta = 0.99), # Uncomment if model has divergent transitions.
+             chains = 3
+              )
 
-#see how long sampling took # TODO Move to next script. 
-print(get_elapsed_time(mod_1)) #(Currently runs in ~3 min. for 3 NOAA codes.)
+# Save Model results and data --------------------------------------------------
 
-# Check convergence ------------------------------------------------------------
-# TODO: Move to next script. 
-summary <- summary(mod_1)$summary
-# Make plots (M, lambda, beta_0 (regional), lambda, beta, beta_0 (bar))
-# Check that Rhat values are below 1.1 for all variables
-for (i in 1:nrow(summary)){
-    if(summary[i,'Rhat']>=1.1){
-        print(summary[i,'Rhat'])
-    }
-}
-
-# Values of Rhat fine for all variables, which suggests convergence.
-
-# # Check convergence
-# summary <- summary(mod_2)$summary
-# # Make plots (M, lambda, beta_0 (regional), lambda, beta, beta_0 (bar))
-# # Check that Rhat values are below 1.1 for all variables
-# for (i in 1:nrow(summary)){
-#     if(summary[i,'Rhat']>=1.1){
-#         print(summary[i,'Rhat'])
-#     }
-# }
-# 
-# Save data, model -------------------------------------------------------------
-#save model and associated data 
 saveRDS(mod_1, paste0(der_dat_spec_path,"/model.rda"))
 saveRDS(mod_dat, paste0(der_dat_spec_path,"/model_dat.rda"))
 write.csv(output$bar_key, paste0(der_dat_spec_path,"/bar_reg_key.csv"), row.names = F)
 write.csv(output$raw_mod_dat, paste0(der_dat_spec_path,"/raw_dat.csv"),row.names = F)
-write.csv(NOAA_list, file = paste0(der_dat_spec_path,"/NOAA_list.csv"), row.names = F )
+write.csv(output$NOAA_vec, file = paste0(der_dat_spec_path,"/NOAA_list.csv"), row.names = F )
 

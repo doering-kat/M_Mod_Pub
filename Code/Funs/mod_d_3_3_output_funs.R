@@ -196,18 +196,18 @@ PlotData <- function(all_dat_ts, file_path = "." ,file_name = "Plots.pdf") {
   # used if calc_log_r_p == F.
 
 # Outputs: 
-# A list with 3 components:
+# A list with 4 components:
 # mod_dat, the data in the correct form that can be read into mod_d_3_3.stan.
 # bar_key, Matches the bar number in mod_dat with its ID and NOAA code
   # (necessary for relating model results back to the Fall Survey Data)
 # raw_mod_dat, model data in flat form (but not including priors and constants, 
   # just the samples)
+# NOAA_vec, a vector of the NOAA codes included in the model.
 
 CreateModDataList <- function(all_dat_ts, e_diff = 1.79, frac_disart = .2 , 
                               d_p = c(0.51, 0.04), calc_log_r_p = F, 
                               log_lambda_r_p = 0, log_beta_0_r_p = 0) {
   require(dplyr)
-  require(purrr)
   
   # Calculate necessary values -----------------------------------------------
   # Necessary for data manipulation or model input.
@@ -247,17 +247,18 @@ CreateModDataList <- function(all_dat_ts, e_diff = 1.79, frac_disart = .2 ,
   
   # Put NOAA code level data as a list components ----------------------------
   
-  # for both the bar key and for the model data inputs.
-  bar_key_each <- list() #make a list of bar keys where each bar key is for a different NOAA Code
-  I_each       <- list() #make a list of number of bars for each NOAACode/region
-  obs_each     <- list() # list of observations for each NOAACode/region
-  n_obs_each_tot <- list() # number of observations for each NOAA Code/region
-  obs_each_0   <- list() # list of observations fore each NOAA code in year 0
-  n_obs_each_0 <- list() # number of observations of each NOAA code/region yr 0
-  tmp_ModBar_max <- 0 # initialize the bar index to 0
+  # Initialize lists and values for both the bar key and for the model data inputs.
+  bar_key_each <- list() # Make a list of bar keys where each bar key is for a different NOAA Code
+  I_each       <- list() # Make a list of number of bars for each NOAACode/region
+  obs_each     <- list() # List of observations for each NOAACode/region
+  n_obs_each_tot <- list() # Number of observations for each NOAA Code/region
+  obs_each_0   <- list() # List of observations fore each NOAA code in year 0
+  n_obs_each_0 <- list() # Number of observations of each NOAA code/region yr 0
+  tmp_ModBar_max <- 0 # Initialize the bar index to 0
   
-  for (i in 1:length(NOAA_vec)){ # Loop through NOAA codes
-    # make bar keys
+  # Fill in lists by looping through NOAA codes
+  for (i in 1:length(NOAA_vec)){
+    # Make bar keys
     tmp_bar_list <- unique(dat_list[[i]]$ID) # unique bars for the NOAA code
     I_each[[i]] <- length(tmp_bar_list) #number of bars for the NOAA code
     # put together the bar key
@@ -309,11 +310,8 @@ CreateModDataList <- function(all_dat_ts, e_diff = 1.79, frac_disart = .2 ,
     obs <- rbind(obs,obs_each[[i]])
     obs_0 <- rbind(obs_0, obs_each_0[[i]])
   }
-  # To change (get rid of top part)
-  # I <- purrr::flatten_int(I_each)
-  # obs <- purrr:flatten_dfr(obs_each)
-  # obs_0 <- purrr:flatten_dfr(obs_0)
-  
+
+
   I_tot <- sum(I)
   n_obs_tot <- nrow(obs)
   n_obs_0 <- nrow(obs_0)
@@ -336,7 +334,7 @@ CreateModDataList <- function(all_dat_ts, e_diff = 1.79, frac_disart = .2 ,
     bar_key <- bind_rows(bar_key,bar_key_each[[i]])
   }
   
-  # Create Data for model priors ---------------------------------------------
+  # Create data for model priors ---------------------------------------------
   # Only ones that are not already created.
   
   #R_q <- 1.68 # Mean value, ratio of catchability # added to function input instead.
@@ -373,7 +371,7 @@ CreateModDataList <- function(all_dat_ts, e_diff = 1.79, frac_disart = .2 ,
                   I_ind_0 = as.vector(obs_0[,"ModBar"]),
                   B_0     = as.vector(obs_0[,"B"]),
                   I_REG   = I_REG,
-                  R_q = R_q, #KD modified 12/12/2018 (but should be back compatible)
+                  R_q = R_q,
                   d_p = d_p,
                   M_p = M_p,
                   Z_sigma = Z_sigma,
@@ -381,19 +379,20 @@ CreateModDataList <- function(all_dat_ts, e_diff = 1.79, frac_disart = .2 ,
                   log_beta_0_r_p=log_beta_0_r_p
                   )
   
-  # create a list of the "raw_mod_dat", essentially the model in flat form that
-  # may be easier to manipulate for later plotting.
+  # create a list of the "raw_mod_dat", essentially the model input data (minus
+    # priors and constants) in flat form that
+    # may be easier to manipulate for later plotting.
   raw_mod_dat <- dat_list[[1]]
   for (i in 2:length(NOAA_vec)){
-      raw_mod_dat <- bind_rows(raw_mod_dat, dat_list[[i]])
+    raw_mod_dat <- bind_rows(raw_mod_dat, dat_list[[i]])
   }
-  # to change: use purrr instead
-  # raw_mod_dat <- purrr::flatten_dfr(dat_list)
-  # Make return data list and return -----------------------------------------
+
+  # Function return ------------------------------------------------------------
   return_list <- list(
                       mod_dat = mod_dat, 
                       bar_key = bar_key,
-                      raw_mod_dat = raw_mod_dat
+                      raw_mod_dat = raw_mod_dat,
+                      NOAA_vec = NOAA_vec
                       )
   return(return_list)
 }
