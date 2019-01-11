@@ -76,10 +76,6 @@ all_dat_ts <- SelectData(
 
 
 NOAA_list <- sort(unique(all_dat_ts$NOAACode)) #some noaa codes may be eliminated.
-#32/42 NOAA codes remain
-#NOAA_list_init[!(NOAA_list_init %in% NOAA_list)] # see NOAA codes that were
-# not included, which can then be compared against a list of the samples
-# to ensure its exclusion makes sense based on the rules.
 
 # Make diagnostic plots (note: takes ~ 30 s to run)
 PlotData(all_dat_ts = all_dat_ts, file_path = fig_spec_path, file_name = "Data_Plots.pdf")
@@ -87,11 +83,6 @@ PlotData(all_dat_ts = all_dat_ts, file_path = fig_spec_path, file_name = "Data_P
 #Get data sets to run the model as well as use for plotting later
 output <- CreateModDataList(all_dat_ts = all_dat_ts)
 mod_dat <- output$mod_dat
-
-#modify the value of R to account for 20% of the boxes decaying before the survey.
-# (i.e., at the survey, see 100% of lives, but only see 80% of boxes for this cause.)
-
-mod_dat[["R_q"]] <- (1/0.8)*mod_dat[["R_q"]]
 
 #Check the model data before proceeding to make sure R has been changed. 
 #-------------------------------------------------------------------------------

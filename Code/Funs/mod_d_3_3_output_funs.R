@@ -10,15 +10,18 @@
 # Select only datas in NOAA codes specified that have bars with a complete time 
 # series
 
-# inputs are:
+# inputs:
 # dat, the fall survey data, (dataframe) 
-# NOAA_vec, a vector containing the NOAA  codes of interest (some may not have sufficient data, though),
+# NOAA_vec, a vector containing the NOAA  codes of interest (some may not have 
+  # sufficient data, though),
 # yr_0, the year 0 for the model, an integer
 # yr_last, the last year of the model, an integer
-# remove_0, true if observations of boxes and live oysters  where both are 0 should be removed, logical
+# remove_0, true if observations of boxes and live oysters  where both are 0 
+  # should be removed, logical
 # n_ts, the minimum number of bars the time series must have to be included, an integer
 
-# output is all_dat_ts, a dataframe containing data for bars wit a complete time series
+# output:
+#  all_dat_ts, a dataframe containing data for bars wit a complete time series
 
 SelectData <- function(dat, NOAA_vec, yr_0, yr_last, remove_0 = FALSE, n_ts = 2) {
   
@@ -120,10 +123,11 @@ SelectData <- function(dat, NOAA_vec, yr_0, yr_last, remove_0 = FALSE, n_ts = 2)
 # inputs:
 # all_dat_ts, a dataframe that is output from SelectData
 # file path, which is the complete file path to the folder that the plots will
-# be placed in.
+  # be placed in.
 # file_name, which is the name and extension (must be.pdf) of the file created.
 
-# Output: a pdf containing plots of all_dat_ts.
+# Output: 
+# a pdf containing plots of all_dat_ts.
 
 PlotData <- function(all_dat_ts, file_path = "." ,file_name = "Plots.pdf") {
   
@@ -173,166 +177,225 @@ PlotData <- function(all_dat_ts, file_path = "." ,file_name = "Plots.pdf") {
 }
 
 # Function 3: Create list of data for model ------------------------------------
-#Next section: modified from M_Probability model/code/stan/mod_d/d_1/mod_d_1_6_real_dat_1.R.
-#modified for the data structure of model_d_3_1.stan.
-# R_q: value for ratio of catchability
-# calc_log_r_p: T if log_lambda_r_p and log_beta_0_r_p should be calculated from the
-# data, false if they should be set to values in the function
-# log_r_p: set values for log_lambda_r_p and log_beta_0_r_p
-CreateModDataList <- function(all_dat_ts, R_q = 1.68, calc_log_r_p = T, 
-                              log_lambda_r_p = 0, log_beta_0_r_p = 0){
-    require(dplyr)
-    #put data for each NOAA code into its own component in a list. 
-    dat_list <- list() #create a blank list to explore the
-    for (i in 1:length(NOAA_vec)){
-        dat_list[[i]] <- all_dat_ts %>% filter(NOAACode == NOAA_vec[i]) %>% arrange(SampleYr) %>% arrange(ID)
-    }
-    
-    #Data for Years
-    yr_0  <- all_dat_ts %>% select(SampleYr) %>% min()
-    yr_last <- all_dat_ts %>% select(SampleYr) %>% max()
-    yr_vec <- seq(yr_0, yr_last, by = 1)
-    
-    #Number of bars in each region. Call 192 - region 1 and 292 region 2.
-    #I <- c(length(unique(dat_192$ID)), length(unique(dat_292$ID))) #8 bars in 192, 3 in 292.
-    
-    #year key (use for both regions)
-    yr_key <- data.frame(ModYr = seq(0, by = 1, length.out = length(yr_vec)), 
-                         SampleYr = yr_vec)
-    Y <- length(yr_vec)-1 # subtract 1 for year 0.
-    
-    #-------------------
-    #For region i
-    
-    #bar key is not numbering correctly. need to keep looking into.
-    #make a list of bar keys where each bar key is for a different NOAA Code
-    bar_key_each <- list() 
-    I_each       <- list() #make a list of number of bars for each region. 
-    obs_each     <- list()
-    n_obs_each_tot <- list()
-    obs_each_0   <- list()
-    n_obs_each_0 <- list()
-    tmp_ModBar_max <- 0
-    for (i in 1:length(NOAA_vec)){
-        #bar key
-        tmp_bar_list <- unique(dat_list[[i]]$ID) # Not sure if this will subset correctly?
-        I_each[[i]] <- length(tmp_bar_list) #number of bars
-        bar_key_each[[i]] <- data.frame(ModBar = seq((tmp_ModBar_max+1), by = 1, length.out = length(tmp_bar_list)), 
-                                ID = tmp_bar_list, stringsAsFactors = F)
-        tmp_ModBar_max <- max(bar_key_each[[i]]$ModBar) #get max to use for next iteration.
-        #add ModYr and ModBar columns to the data frame
-        dat_list[[i]] <- dat_list[[i]] %>% 
-            left_join(yr_key, by = "SampleYr") %>%  # yr key should be the same for all regions.
-            left_join(bar_key_each[[i]], by = "ID")      # bar key depends on region.
-        
-        obs_each[[i]] <- dat_list[[i]] %>%
-            select(ModBar, ModYr, L, B) %>%
-            filter(ModYr > 0)
-        obs_each[[i]]$ModBar <- as.integer(obs_each[[i]]$ModBar)
-        obs_each[[i]]$ModYr <- as.integer(obs_each[[i]]$ModYr)
-        obs_each[[i]]$L <-  as.integer(obs_each[[i]]$L)
-        obs_each[[i]]$B <- as.integer(obs_each[[i]]$B)
-        obs_each[[i]] <- as.matrix(obs_each[[i]])
-        n_obs_each_tot[[i]] <- nrow(obs_each[[i]]) #total number of observations
-        obs_each_0[[i]] <- dat_list[[i]] %>% 
-                            filter(ModYr == 0) %>% 
-                            select(ModBar, B) #select only year 0 box obs. Don't need lives for year 0. 
-        obs_each_0[[i]]$ModBar <- as.integer(obs_each_0[[i]]$ModBar)
-        obs_each_0[[i]]$B <- as.integer(obs_each_0[[i]]$B)
-        obs_each_0[[i]] <- as.matrix(obs_each_0[[i]]) #not sure if this will work?
-        n_obs_each_0[[i]] <- nrow(obs_each_0[[i]])
-    }
-    
-    #-------------------------------------------------------------------------------
-    #Now, put data together for all bars:
-    REG <- length(NOAA_vec) #number of regions
-    #First iteration
-    I <- I_each[[1]]
-    obs <- obs_each[[1]]
-    obs_0 <- obs_each_0[[1]]
-    for (i in 2:length(NOAA_vec)){
-        I <- c(I,I_each[[i]]) #number of bars in each region.
-        obs <- rbind(obs,obs_each[[i]])
-        obs_0 <- rbind(obs_0, obs_each_0[[i]])
-    }
-    I_tot <- sum(I)
-    n_obs_tot <- nrow(obs)
-    n_obs_0 <- nrow(obs_0)
-    
-    I_REG <- rep(1, times = I[1])#first iteration
-    for (i in 2:length(NOAA_vec)){
-        I_REG <- c(I_REG, rep(i, times = I[i]))
-    }
-    
-    #Make sure to keep track of bars and the region they are from
-    for (i in 1:length(NOAA_vec)){
+
+# Designed for the data structure of model_d_3_3.stan.
+
+# Inputs:
+# all_dat_ts, output from the SelectData function, a dataframe.
+# e_diff, the ratio of efficiency of lives/ efficiency of boxes. default is 
+  # the value for the base model. Should be numeric.
+  # frac_disart, proportion of oysters disarticuling before the survey. Default is
+  # the value for the base model. Should be numeric between 0 and 1.
+# d_p, prior distribution for the disarticulation rate. a numeric vector of 
+  # length 2, where the first component is the mean and second the standard 
+  # deviation. Default is the base model values
+# calc_log_r_p, T if log_lambda_r_p and log_beta_0_r_p should be calculated from 
+  # the data, F if they should be set to values log_lambda_r_p and 
+  # log_beta_0_r_p. logical.
+# log_r_p: set values for log_lambda_r_p and log_beta_0_r_p. numeric. Are only 
+  # used if calc_log_r_p == F.
+
+# Outputs: 
+# A list with 3 components:
+# mod_dat, the data in the correct form that can be read into mod_d_3_3.stan.
+# bar_key, Matches the bar number in mod_dat with its ID and NOAA code
+  # (necessary for relating model results back to the Fall Survey Data)
+# raw_mod_dat, model data in flat form (but not including priors and constants, 
+  # just the samples)
+
+CreateModDataList <- function(all_dat_ts, e_diff = 1.79, frac_disart = .2 , 
+                              d_p = c(0.51, 0.04), calc_log_r_p = F, 
+                              log_lambda_r_p = 0, log_beta_0_r_p = 0) {
+  require(dplyr)
+  require(purrr)
+  
+  # Calculate necessary values -----------------------------------------------
+  # Necessary for data manipulation or model input.
+  R_q <- e_diff*(1/(1-frac_disart)) # Calculate R_q, model input.
+  #Calculate Years
+  yr_0  <- all_dat_ts %>% 
+             dplyr::select(SampleYr) %>% 
+             min() 
+  yr_last <- all_dat_ts %>% 
+               dplyr::select(SampleYr) %>% 
+               max()
+  yr_vec <- seq(yr_0, yr_last, by = 1)
+  
+  #Create the year key (use for both regions)
+  yr_key <- data.frame(ModYr = seq(0, by = 1, length.out = length(yr_vec)), 
+    SampleYr = yr_vec)
+  Y <- length(yr_vec)-1 # subtract 1 for year 0.
+  
+  # sort all_dat_ts by Bar ID, then by NOAA code, then use to make an ordered
+  # vector of NOAA codes.
+  arr_dat <- all_dat_ts %>% 
+    dplyr::arrange(ID) %>% 
+    dplyr::arrange(NOAACode)
+  
+  NOAA_vec <- unique(arr_dat$NOAACode)
+  
+  # Manipulate all_dat_ts-----------------------------------------------------
+  
+  # Put data for each NOAA code into its own component in a list. 
+  dat_list <- list()
+  for (i in 1:length(NOAA_vec)){
+      dat_list[[i]] <- all_dat_ts %>% 
+                         dplyr::filter(NOAACode == NOAA_vec[i]) %>%
+                         dplyr::arrange(SampleYr) %>% 
+                         dplyr::arrange(ID)
+  }
+  
+  # Put NOAA code level data as a list components ----------------------------
+  
+  # for both the bar key and for the model data inputs.
+  bar_key_each <- list() #make a list of bar keys where each bar key is for a different NOAA Code
+  I_each       <- list() #make a list of number of bars for each NOAACode/region
+  obs_each     <- list() # list of observations for each NOAACode/region
+  n_obs_each_tot <- list() # number of observations for each NOAA Code/region
+  obs_each_0   <- list() # list of observations fore each NOAA code in year 0
+  n_obs_each_0 <- list() # number of observations of each NOAA code/region yr 0
+  tmp_ModBar_max <- 0 # initialize the bar index to 0
+  
+  for (i in 1:length(NOAA_vec)){ # Loop through NOAA codes
+    # make bar keys
+    tmp_bar_list <- unique(dat_list[[i]]$ID) # unique bars for the NOAA code
+    I_each[[i]] <- length(tmp_bar_list) #number of bars for the NOAA code
+    # put together the bar key
+    bar_key_each[[i]] <- data.frame(ModBar = seq(from=(tmp_ModBar_max+1), by = 1, length.out = length(tmp_bar_list)), 
+                                        ID = tmp_bar_list, 
+                                    stringsAsFactors = F)
+    #get max to use for next iteration of making the bar key.
+    tmp_ModBar_max <- max(bar_key_each[[i]]$ModBar) 
+    #add ModYr and ModBar columns to the dat_list
+    dat_list[[i]] <- dat_list[[i]] %>% 
+                       # yr key should be the same for all regions.
+                       dplyr::left_join(yr_key, by = "SampleYr") %>%
+                       # bar key depends on region.
+                       dplyr::left_join(bar_key_each[[i]], b = "ID")     
+    # Get the obsrvations for the NOAA code.
+    obs_each[[i]] <- dat_list[[i]] %>%
+                       dplyr::select(ModBar, ModYr, L, B) %>%
+                       dplyr::filter(ModYr > 0)
+    # Convert the observations to the correct type.
+    obs_each[[i]]$ModBar <- as.integer(obs_each[[i]]$ModBar)
+    obs_each[[i]]$ModYr <- as.integer(obs_each[[i]]$ModYr)
+    obs_each[[i]]$L <-  as.integer(obs_each[[i]]$L)
+    obs_each[[i]]$B <- as.integer(obs_each[[i]]$B)
+    obs_each[[i]] <- as.matrix(obs_each[[i]])
+    # Get the total number of observations for the NOAA code
+    n_obs_each_tot[[i]] <- nrow(obs_each[[i]])
+    # Get the observations for year 0
+    obs_each_0[[i]] <- dat_list[[i]] %>% 
+                        filter(ModYr == 0) %>% 
+                        select(ModBar, B) #select only year 0 box obs. Don't need lives for year 0. 
+    # Convert the year 0 obs to the correct data type
+    obs_each_0[[i]]$ModBar <- as.integer(obs_each_0[[i]]$ModBar)
+    obs_each_0[[i]]$B <- as.integer(obs_each_0[[i]]$B)
+    obs_each_0[[i]] <- as.matrix(obs_each_0[[i]])
+    # Get the total number of observations for the NOAA code in year.
+    n_obs_each_0[[i]] <- nrow(obs_each_0[[i]])
+  }
+  
+  #Combine lists -------------------------------------------------------------
+  #Now, put data together for all NOAA codes,to create the model data
+  
+  REG <- length(NOAA_vec) #number of regions
+  # #First iteration
+  I <- I_each[[1]]
+  obs <- obs_each[[1]]
+  obs_0 <- obs_each_0[[1]]
+  for (i in 2:length(NOAA_vec)){
+    I <- c(I,I_each[[i]]) #number of bars in each region.
+    obs <- rbind(obs,obs_each[[i]])
+    obs_0 <- rbind(obs_0, obs_each_0[[i]])
+  }
+  # To change (get rid of top part)
+  # I <- purrr::flatten_int(I_each)
+  # obs <- purrr:flatten_dfr(obs_each)
+  # obs_0 <- purrr:flatten_dfr(obs_0)
+  
+  I_tot <- sum(I)
+  n_obs_tot <- nrow(obs)
+  n_obs_0 <- nrow(obs_0)
+  
+  I_REG <- rep(1, times = I[1])#first iteration
+  for (i in 2:length(NOAA_vec)){
+    I_REG <- c(I_REG, rep(i, times = I[i]))
+  }
+  
+  # Create bar key -----------------------------------------------------------
+  #Make sure to keep track of bars and the region they are from
+  for (i in 1:length(NOAA_vec)){
     bar_key_each[[i]]$ModReg <- rep(i, length.out = nrow(bar_key_each[[i]]))
     bar_key_each[[i]]$NOAACode <- rep(NOAA_vec[i], length.out = nrow(bar_key_each[[i]]))
-    }
-    
-    #Bind rows
-    bar_key <- bar_key_each[[1]]
-    for (i in 2:length(NOAA_vec)){
-        bar_key <- bind_rows(bar_key,bar_key_each[[i]])
-    }
-    
-    # Data for constants and priors (may need to modify these at some point)
-    #R_q <- 1.68 # Mean value, ratio of catchability # added to function input instead.
-    d_p <- c(0.51, 0.04) #Normal distribution for the mean.
-    M_p <- c(1, 1) # Gives more support for M ~ 0.2
-    Z_sigma <- 3.0
-    
+  }
+  
+  #Bind rows to create the bar key.
+  bar_key <- bar_key_each[[1]]
+  for (i in 2:length(NOAA_vec)){
+    bar_key <- bind_rows(bar_key,bar_key_each[[i]])
+  }
+  
+  # Create Data for model priors ---------------------------------------------
+  # Only ones that are not already created.
+  
+  #R_q <- 1.68 # Mean value, ratio of catchability # added to function input instead.
+  #d_p <- c(0.51, 0.04) #Normal distribution for the mean. # added to function input instead.
+  M_p <- c(1, 1) # pars are alpha and beta for a beta distribution.
+  Z_sigma <- 3.0
+  
+  if (calc_log_r_p == T){ # change if want to calculate them from data. 
+    #calculate from the data.
     logmeanL <- mean(log(obs[,'L']+0.01)) # rough mean param for prior.
     logmeanB <- mean(log(obs[,'B']+0.01)) #rough mean for prior on Beta.
-    #rough priors (could change them to be region specific, but not meant to be that informative.)
-    if (calc_log_r_p == T){ # change if want to calculate them from data. 
-        log_lambda_r_p <- matrix(rep(c(logmeanL,5), times = length(NOAA_vec)), nrow = length(NOAA_vec), ncol = 2, byrow = T)
-        log_beta_0_r_p <- matrix(rep(c(logmeanB,5), times = length(NOAA_vec)), nrow = length(NOAA_vec), ncol = 2, byrow = T)
-    } else{
-        log_lambda_r_p <- matrix(rep(c(log_lambda_r_p,5), times = length(NOAA_vec)), nrow = length(NOAA_vec), ncol = 2, byrow = T)
-        log_beta_0_r_p <- matrix(rep(c(log_beta_0_r_p,5), times = length(NOAA_vec)), nrow = length(NOAA_vec), ncol = 2, byrow = T)
-    }
-    
-    
-    
-    #-------------------------------------------------------------------------------
-    # Put in a list to read into model:
-    mod_dat <- list(
-        Y = as.integer(Y),
-        REG = as.integer(REG),
-        I = I,
-        I_tot = I_tot, 
-        n_obs_tot=n_obs_tot,
-        n_obs_0 = n_obs_0,
-        Y_ind = as.vector(obs[,"ModYr"]),
-        I_ind = as.vector(obs[,"ModBar"]),
-        L     = as.vector(obs[,"L"]),
-        B     = as.vector(obs[,"B"]),
-        I_ind_0 = as.vector(obs_0[,"ModBar"]),
-        B_0     = as.vector(obs_0[,"B"]),
-        I_REG   = I_REG,
-        R_q = R_q, #KD modified 12/12/2018 (but should be back compatible)
-        d_p = d_p,
-        M_p = M_p,
-        Z_sigma = Z_sigma,
-        log_lambda_r_p=log_lambda_r_p,
-        log_beta_0_r_p=log_beta_0_r_p
-    )
-    
-    # create a list of the "raw_mod_dat", essentially the model in flat form that
-    # may be easier to manipulate for later plotting.
-    raw_mod_dat <- dat_list[[1]]
-    for (i in 2:length(NOAA_vec)){
-        raw_mod_dat <- bind_rows(raw_mod_dat, dat_list[[i]])
-    }
-    #-------------------------
-    # Make return data list: things of interest
-    return_list <- list(
-                        mod_dat = mod_dat, 
-                        bar_key = bar_key,
-                        raw_mod_dat = raw_mod_dat
-                        )
-    return(return_list)
+    #Set the priors from data
+    log_lambda_r_p <- matrix(rep(c(logmeanL,5), times = length(NOAA_vec)), nrow = length(NOAA_vec), ncol = 2, byrow = T)
+    log_beta_0_r_p <- matrix(rep(c(logmeanB,5), times = length(NOAA_vec)), nrow = length(NOAA_vec), ncol = 2, byrow = T)
+  } else {
+    # set the priors from function inputs.
+    log_lambda_r_p <- matrix(rep(c(log_lambda_r_p,5), times = length(NOAA_vec)), nrow = length(NOAA_vec), ncol = 2, byrow = T)
+    log_beta_0_r_p <- matrix(rep(c(log_beta_0_r_p,5), times = length(NOAA_vec)), nrow = length(NOAA_vec), ncol = 2, byrow = T)
+  }
+  
+  #Create model data list ----------------------------------------------------
+  # Put in a list to read into model:
+  mod_dat <- list(
+                  Y = as.integer(Y),
+                  REG = as.integer(REG),
+                  I = I,
+                  I_tot = I_tot, 
+                  n_obs_tot=n_obs_tot,
+                  n_obs_0 = n_obs_0,
+                  Y_ind = as.vector(obs[,"ModYr"]),
+                  I_ind = as.vector(obs[,"ModBar"]),
+                  L     = as.vector(obs[,"L"]),
+                  B     = as.vector(obs[,"B"]),
+                  I_ind_0 = as.vector(obs_0[,"ModBar"]),
+                  B_0     = as.vector(obs_0[,"B"]),
+                  I_REG   = I_REG,
+                  R_q = R_q, #KD modified 12/12/2018 (but should be back compatible)
+                  d_p = d_p,
+                  M_p = M_p,
+                  Z_sigma = Z_sigma,
+                  log_lambda_r_p=log_lambda_r_p,
+                  log_beta_0_r_p=log_beta_0_r_p
+                  )
+  
+  # create a list of the "raw_mod_dat", essentially the model in flat form that
+  # may be easier to manipulate for later plotting.
+  raw_mod_dat <- dat_list[[1]]
+  for (i in 2:length(NOAA_vec)){
+      raw_mod_dat <- bind_rows(raw_mod_dat, dat_list[[i]])
+  }
+  # to change: use purrr instead
+  # raw_mod_dat <- purrr::flatten_dfr(dat_list)
+  # Make return data list and return -----------------------------------------
+  return_list <- list(
+                      mod_dat = mod_dat, 
+                      bar_key = bar_key,
+                      raw_mod_dat = raw_mod_dat
+                      )
+  return(return_list)
 }
 
 
