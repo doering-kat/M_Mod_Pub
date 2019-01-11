@@ -36,7 +36,7 @@ source("./Code/Funs/mod_d_3_3_output_funs.R", echo = F)
 der_dat_gen_path <- "./Derived_Data/2_Base_Mod_Run"
 # subfolder for this script:
 der_dat_spec_path <- paste0(der_dat_gen_path, "/1_run_model")
-fig_gen_path <- "./Derived_Data/2_Base_Mod_Run"
+fig_gen_path <- "./Figs/2_Base_Mod_Run"
 fig_spec_path <- paste0(fig_gen_path, "/1_run_mod")
 # make the folders
 dir.create(der_dat_gen_path)
@@ -49,7 +49,7 @@ dir.create(fig_spec_path)
 # Fall dredge survey individual tows, all measured in half bushel cultch
 dat <-  read.csv("./Derived_Data/1_Clean_Data/1_Clean_Fall_Survey/fall_survey_half_bu.csv")
 
-# Manipulate Fall Survey Data ---------------------------------------------------
+# Specify input values ---------------------------------------------------------
 
 #CHANGE NOAA codes here- want all possible NOAA codes
 NOAA_list_init <- sort(unique(dat$NOAACode)) #make all the NOAA codes the initial
@@ -60,52 +60,19 @@ yr_0 <- 1990
 yr_last <- 2017
 
 # min number of bars with complete time series a bar needs to be included in the model
-n_ts <- 2
+n_ts <- as.integer(2)
 
 # Modify data ------------------------------------------------------------------
+
 # Select the complete timeseries of data to use. 
-all_dat_ts <- DataSelection(
+all_dat_ts <- SelectData(
     dat = dat, 
-    NOAA_list = NOAA_list_init, 
+    NOAA_vec = NOAA_list_init, 
     yr_0 = yr_0, 
     yr_last = yr_last, 
     remove_0 = FALSE,
     n_ts = n_ts #min number of bars with complete time series required. 
 )
-
-all_dat_ts <- DataSelection(
-  dat = dat, 
-  NOAA_list = NOAA_list_init, 
-  yr_0 = yr_0, 
-  yr_last = yr_last, 
-  remove_0 = TRUE,
-  n_ts = 4 #min number of bars with complete time series required. 
-)
-
-# Check that subset correctly - should be no NOAACodes with < n_ts.
-
-test <- all_dat_ts %>%
-    select(NOAACode, ID) %>%
-    distinct() %>%
-    group_by(NOAACode) %>%
-    count()
-test <- any(test$n < n_ts) #Should return FALSE.
-if(test == TRUE){
-  stop("DataSelection did not subset correctly; dataframe includes NOAAcodes with too few bars to be included.")
-}
-#     
-#  #second test: check that there are no bars without complete time series.
-test_2 <- all_dat_ts %>% 
-            select(ID,SampleYr) %>% 
-            distinct() %>%  # to get bar/year combos included
-            group_by(ID) %>% 
-            count()
-# 
-test_2 <- any(!(test_2$n == (yr_last - yr_0 + 1))) # expect to return FALSE.
-
-if(test == TRUE){
-  stop("Dataselection did not subset correctly: wrong number of years")
-}
 
 
 NOAA_list <- sort(unique(all_dat_ts$NOAACode)) #some noaa codes may be eliminated.
@@ -114,10 +81,9 @@ NOAA_list <- sort(unique(all_dat_ts$NOAACode)) #some noaa codes may be eliminate
 # not included, which can then be compared against a list of the samples
 # to ensure its exclusion makes sense based on the rules.
 
-# Make diagnostic plots 
-MakeDataPlots(all_dat_ts = all_dat_ts, 
-              folder_name = folder_name, 
-              file_name = file_name)
+# Make diagnostic plots (note: takes ~ 30 s to run)
+PlotData(all_dat_ts = all_dat_ts, file_path = fig_spec_path, file_name = "Data_Plots.pdf")
+
 #Get data sets to run the model as well as use for plotting later
 output <- CreateModDataList(all_dat_ts = all_dat_ts)
 mod_dat <- output$mod_dat

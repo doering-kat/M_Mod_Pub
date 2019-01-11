@@ -5,7 +5,7 @@
 # Contains 3 functions
 # Written by KD
 
-# Function 1: Data Selection ---------------------------------------------------
+# Function 1: Select Data ---------------------------------------------------
 
 # Select only datas in NOAA codes specified that have bars with a complete time 
 # series
@@ -20,7 +20,7 @@
 
 # output is all_dat_ts, a dataframe containing data for bars wit a complete time series
 
-DataSelection <- function(dat, NOAA_vec, yr_0, yr_last, remove_0 = FALSE, n_ts = 2) {
+SelectData <- function(dat, NOAA_vec, yr_0, yr_last, remove_0 = FALSE, n_ts = 2) {
   
     require(dplyr)
     n_yr_tot <- yr_last-yr_0+1 # calc total number of years, including yr_0
@@ -114,44 +114,62 @@ DataSelection <- function(dat, NOAA_vec, yr_0, yr_last, remove_0 = FALSE, n_ts =
     return(all_dat_ts)
 }
 
-
 # Function 2: Plot Data --------------------------------------------------------
-# Explore data set to make sure it subset correctly.
-# inputs required are a time series of complete bars (output from DataSelection
-# function, folder name (must exist), and file name of the pdf that is being 
-# output.)
-MakeDataPlots <- function(all_dat_ts, folder_name, file_name) {
-    require(dplyr)
+
+# Plot data that was the output from SelectData function.
+# inputs:
+# all_dat_ts, a dataframe that is output from SelectData
+# file path, which is the complete file path to the folder that the plots will
+# be placed in.
+# file_name, which is the name and extension (must be.pdf) of the file created.
+
+# Output: a pdf containing plots of all_dat_ts.
+
+PlotData <- function(all_dat_ts, file_path = "." ,file_name = "Plots.pdf") {
+  
+    require(dplyr) # required packages
     require(ggplot2)
-    dir.create(paste0("./figures/", folder_name))
-    pdf(paste0('./figures/', folder_name, '/', file_name, '.pdf'), width = 6, height = 4)
-    length(unique(all_dat_ts$ID)) 
+  
+    # Create file paths
+    dir.create(file_path)
+    full_file_name <- paste0(file_path, "/", file_name)
+    
+    # Define NOAA codes to loop over based on the data
+    NOAA_vec <- unique(all_dat_ts$NOAACode)
+    
+    pdf(full_file_name, width = 6, height = 4) # Open pdf device
     #For all the data:
-    print(ggplot(all_dat_ts, aes(SampleYr)) +
-        geom_bar()+ #by year, number os samles, fairly even.
-        ggtitle("Number of samples by year, all NOAA Codes"))
-    # ggplot(all_dat_ts, aes(ID,SampleYr))+
-    #     geom_count() #sampling by year and ID>
+    print(ggplot2::ggplot(all_dat_ts, aes(SampleYr)) +
+            ggplot2::geom_bar()+ #by year, number os samles, fairly even.
+            ggplot2::theme_classic()+
+            ggplot2::ggtitle("Number of samples by year, all NOAA Codes"))
+    
     #By NOAA code
-    for (i in 1:length(NOAA_vec)){ #Loop over NOAA codes.
-        print(ggplot(all_dat_ts[all_dat_ts$NOAACode == NOAA_vec[i],], aes(ID)) +
-            geom_bar()+#Total number of samples by bar. (May need to add title with NOAA code?)
-            ggtitle(paste("Number of samples by bar, NOAA Code", NOAA_vec[i])))
-        print(ggplot(all_dat_ts[all_dat_ts$NOAACode == NOAA_vec[i],], aes(x =ID,y =SampleYr))+
-            geom_count()+# Number of samples by year and ID>
-            ggtitle(paste("Number of samples by year and bar, NOAA Code", NOAA_vec[i])))
+    for(i in 1:length(NOAA_vec)) { #Loop over NOAA codes.
+        # For each NOAA code, plot samples by bar
+        print(ggplot2::ggplot(all_dat_ts[all_dat_ts$NOAACode == NOAA_vec[i],], aes(ID)) +
+              ggplot2::geom_bar()+
+              ggplot2::ggtitle(paste("Number of samples by bar, NOAA Code", NOAA_vec[i])))
+      
+        # For each NOAA code, plot number of samples by year and bar.
+        print(ggplot2::ggplot(all_dat_ts[all_dat_ts$NOAACode == NOAA_vec[i],], aes(x =ID,y =SampleYr))+
+              ggplot2::geom_count()+# Number of samples by year and ID>
+              ggplot2::ggtitle(paste("Number of samples by year and bar, NOAA Code", NOAA_vec[i])))
         
-        tmp_count <- all_dat_ts %>% filter(NOAACode == NOAA_vec[i]) %>%
-            group_by(ID, SampleYr) %>%
-            count() #count the number of samples in each year and bar
-        #plot the number of samples in each year and bar
-        print(ggplot(tmp_count, aes(x=SampleYr, y=n))+
-            geom_col()+
-            facet_wrap(~ID)+
-            ggtitle(paste("Number of samples by bar, NOAA Code", NOAA_vec[i])))
+        # Calculate number of samples by bar and year to plot to make a faceted by 
+        # ID bar plots of number of samples by year.
+        tmp_count <- all_dat_ts %>% 
+                       dplyr::filter(NOAACode == NOAA_vec[i]) %>%
+                       dplyr::group_by(ID, SampleYr) %>%
+                       dplyr::count() #count the number of samples in each year and bar
+        # Plot the number of samples in each year and bar
+        print(ggplot2::ggplot(tmp_count, aes(x=SampleYr, y=n))+
+                ggplot2::geom_col()+
+                ggplot2::facet_wrap(~ID)+
+                ggplot2::ggtitle(paste("Number of samples by bar, NOAA Code", NOAA_vec[i])))
     }
-    dev.off()
-    #not there are no variables returned from making these plots. 
+    dev.off()# Close pdf
+    return() # No variables are returned.
 }
 
 # Function 3: Create list of data for model ------------------------------------
