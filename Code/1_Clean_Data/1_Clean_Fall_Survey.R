@@ -69,7 +69,7 @@ for (n in num_col_names){ # loop through to change
                          )
 }
 
-# Add a new reporting unit  value column, and rename the ReportingUnit and ReoportingUnitValue Columns
+# Add a new reporting unit value column, and rename the ReportingUnit and ReportingUnitValue Columns
 tows_half_bu <- tows_half_bu %>% 
                   rename(OldReportingUnit = ReportingUnit) %>% 
                   rename(OldReportingUnitValue = ReportingUnitValue) %>% 
@@ -77,6 +77,3 @@ tows_half_bu <- tows_half_bu %>%
 
 # write new data ---------------------------------------------------------------
 write.csv(tows_half_bu, paste0(der_dat_spec_path,"/fall_survey_half_bu.csv"), row.names = FALSE)
-
-  
-  
