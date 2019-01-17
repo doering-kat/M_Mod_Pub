@@ -1,10 +1,10 @@
-# Header 
+# Header -----------------------------------------------------------------------
 # 
 # Check model convergence and make diagnostic plots
 # Use Rhat, and divergent transitions to determine if there are any indications
 # that the model did not converge.
 # 
-# Written 11 Jan 2019 by Kathryn Doering 
+# Written 11 Jan 2019 by Kathryn Doering
 # 
 # Load Packages and set options ------------------------------------------------
 library(tidyverse)
@@ -36,7 +36,7 @@ dir.create(fig_spec_path)
 
 # Elapsed time -----------------------------------------------------------------
 # #see how long sampling took
-print(get_elapsed_time(mod)) #(Currently runs in ~3 min. for 3 NOAA codes.)
+print(get_elapsed_time(mod))
 
 # Check for divergent samples --------------------------------------------------
 # Get divergent samples
