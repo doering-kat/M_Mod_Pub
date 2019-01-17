@@ -182,9 +182,9 @@ PlotData <- function(all_dat_ts, file_path = "." ,file_name = "Plots.pdf") {
 
 # Inputs:
 # all_dat_ts, output from the SelectData function, a dataframe.
-# e_diff, the ratio of efficiency of lives/ efficiency of boxes. default is 
+# R_eff, the ratio of efficiency of lives/ efficiency of boxes. default is 
   # the value for the base model. Should be numeric.
-  # frac_disart, proportion of oysters disarticuling before the survey. Default is
+  # frac_d_prev, proportion of oysters disarticuling before the survey. Default is
   # the value for the base model. Should be numeric between 0 and 1.
 # d_p, prior distribution for the disarticulation rate. a numeric vector of 
   # length 2, where the first component is the mean and second the standard 
@@ -204,14 +204,14 @@ PlotData <- function(all_dat_ts, file_path = "." ,file_name = "Plots.pdf") {
   # just the samples)
 # NOAA_vec, a vector of the NOAA codes included in the model.
 
-CreateModDataList <- function(all_dat_ts, e_diff = 1.79, frac_disart = .2 , 
+CreateModDataList <- function(all_dat_ts, R_eff = 1.79, frac_d_prev = .2 , 
                               d_p = c(0.51, 0.04), calc_log_r_p = F, 
                               log_lambda_r_p = 0, log_beta_0_r_p = 0) {
   require(dplyr)
   
   # Calculate necessary values -----------------------------------------------
   # Necessary for data manipulation or model input.
-  R_q <- e_diff*(1/(1-frac_disart)) # Calculate R_q, model input.
+
   #Calculate Years
   yr_0  <- all_dat_ts %>% 
              dplyr::select(SampleYr) %>% 
@@ -337,7 +337,7 @@ CreateModDataList <- function(all_dat_ts, e_diff = 1.79, frac_disart = .2 ,
   # Create data for model priors ---------------------------------------------
   # Only ones that are not already created.
   
-  #R_q <- 1.68 # Mean value, ratio of catchability # added to function input instead.
+  #R_eff <- 1.68 # Mean value, ratio of catchability # added to function input instead.
   #d_p <- c(0.51, 0.04) #Normal distribution for the mean. # added to function input instead.
   M_p <- c(1, 1) # pars are alpha and beta for a beta distribution.
   Z_sigma <- 3.0
@@ -371,7 +371,8 @@ CreateModDataList <- function(all_dat_ts, e_diff = 1.79, frac_disart = .2 ,
                   I_ind_0 = as.vector(obs_0[,"ModBar"]),
                   B_0     = as.vector(obs_0[,"B"]),
                   I_REG   = I_REG,
-                  R_q = R_q,
+                  R_eff = R_eff,
+                  frac_d_prev = frac_d_prev,
                   d_p = d_p,
                   M_p = M_p,
                   Z_sigma = Z_sigma,
