@@ -54,16 +54,18 @@ if(sum(div_samples_by_chain)>0) warning("There are divergent samples")
 # get param summaries, includes neff and rhat
 all_par_summary <- summary(mod)$summary 
 
+# Rhat
 # put all rhat values in a vector and check
 all_par_rhat <- all_par_summary[,"Rhat"]
 # warn if there are r hat values above 1.1
 max(all_par_rhat)
 if(max(all_par_rhat)>1.1) warning("There are Rhat values > 1.1")
 
+# neff
 # put all n_effective values in a vector and check
 all_par_neff <- all_par_summary[,"n_eff"]
 # see if neff is adequate.
-min(all_par_neff) # all above 1,000.
+min(all_par_neff) # Hopefully, all above 1,000. (or close to 1,000)
 if(any(all_par_neff <1000)) warning("There were parameters with neff < 1000")
 
 # write summary to a file ------------------------------------------------------

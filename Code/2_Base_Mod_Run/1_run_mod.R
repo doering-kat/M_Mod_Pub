@@ -34,7 +34,7 @@ source("./Code/Funs/M_Mod_1_output_funs.R", echo = F)
 # general derived data for all base model run scripts:
 der_dat_gen_path <- "./Derived_Data/2_Base_Mod_Run"
 # subfolder for this script:
-der_dat_spec_path <- paste0(der_dat_gen_path, "/1_run_model")
+der_dat_spec_path <- paste0(der_dat_gen_path, "/1_run_mod")
 fig_gen_path <- "./Figs/2_Base_Mod_Run"
 fig_spec_path <- paste0(fig_gen_path, "/1_run_mod")
 # make the folders
