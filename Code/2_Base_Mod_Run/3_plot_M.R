@@ -8,7 +8,7 @@
 # create median plots by year on map, 
 # (find way to make into gif within R), 
 # create plots of the mean/sd of median on map,
-# Think about other ways to visualize these results?
+# Think about other ways to visualize these results? (EEE last section for some thoughts.)
 
 # Clear global env--------------------------------------------------------------
 rm(list = ls())
@@ -223,6 +223,17 @@ region_names <- unique(regions$R_region) #get region names
 purrr::map(region_names, ~Plot_By_Region(R_region_name = .x, all_plots_df = plots, file_path = fig_spec_path ))
 
 # Plot Mean and sd of median M on CB map ---------------------------------------
+
 # Plot median by year on CB map ------------------------------------------------
+
 # Think of other ways to plot mortality (any way to synthesize in the paper?)---
+# Individual plots take up a lot of space! Perhaps there is a better way to show
+# them? (or: maybe just show a few key M comparison plots (include the rest in 
+# an online supplement, and just show results of the dfa?))
+
+#OR, maybe make a plot like the dfa input, but separate by region? This would 
+#reduce the number of plots, but it may be difficult to see for other regions.
+#OR, perhaps if the main take home is the DFA, maybe it doesn't matter to show
+#the absolute plots, and just showing the standardized M plot and the 
+#Mean/sd over years by region will do..... think more about this!! 
 
