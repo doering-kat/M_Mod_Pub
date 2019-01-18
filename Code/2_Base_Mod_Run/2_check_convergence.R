@@ -6,6 +6,9 @@
 # 
 # Written 11 Jan 2019 by Kathryn Doering
 # 
+# Clear global env--------------------------------------------------------------
+rm(list = ls())
+
 # Load Packages and set options ------------------------------------------------
 library(tidyverse)
 library(rstan)

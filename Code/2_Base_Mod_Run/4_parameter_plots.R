@@ -7,6 +7,8 @@
 # Some may also be included in 5_manuscript_figures.R
 # 
 # Written 17 Jan 2019 by Kathryn Doering
+# Clear global env--------------------------------------------------------------
+rm(list = ls())
 
 # Load packages -----------------------------------------------------------------
 library(dplyr)

@@ -13,7 +13,10 @@
 # This information was included in description of the dataset.
 
 # Written 14 Jan 2019 by Kathryn Doering
-# 
+#
+# Clear global env--------------------------------------------------------------
+rm(list = ls())
+
 # load packages, set options ---------------------------------------------------
 library(tidyverse)
 options(stringsAsFactors = F)

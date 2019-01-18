@@ -11,6 +11,9 @@
 # 
 # Written 9 Jan 2019 by Kathryn Doering
 # 
+# Clear global env--------------------------------------------------------------
+rm(list = ls())
+
 # Load Packages and set options ------------------------------------------------
 # packages
 library(tidyverse)
@@ -78,7 +81,7 @@ output <- CreateModDataList(all_dat_ts = all_dat_ts)
 mod_dat <- output$mod_dat
 
 # Run model---------------------------------------------------------------------
-
+# WARNING: Run may take several hours with the whole fall survey database.
 mod_1 <- stan(
                file = "./Code/Stan_Mods/M_Mod_1.stan",
                iter = 4000, #Started with 4000 iterations based on info from previous runs
