@@ -5,9 +5,7 @@
 # 
 # Written 18 Jan 2019 by Kathryn Doering
 # TODO:
-# Save output
-# Check code. 
-
+# Check code (including function and formatting.)
 # Clear global env--------------------------------------------------------------
 
 rm(list = ls())
@@ -46,6 +44,7 @@ theta <- seq(0, 1, length  = 1000)
 f_theta <- dnorm(theta, mean = d_dist[1], sd = d_dist[2])
 
 # Plot d -----------------------------------------------------------------------
+
 # Model estimate and prior.
 
 png(paste0(fig_spec_path,"/d_prior_post.png"), 
@@ -72,5 +71,8 @@ legend("topleft",
 dev.off()
 
 # Save data --------------------------------------------------------------------
+
 # save mod_sim$d 
-# save d_summary
+write.csv(mod_sim$d, paste0(der_dat_spec_path, "/mod_samples_d_post_warmup.csv"))
+# save summary_d
+write.csv(summary_d, paste0(der_dat_spec_path, "/mod_summary_d.csv"), row.names = F )
