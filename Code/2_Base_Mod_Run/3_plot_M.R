@@ -11,9 +11,10 @@
 # Think about other ways to visualize these results? (EEE last section for some thoughts.)
 
 # Clear global env--------------------------------------------------------------
+# 
 rm(list = ls())
 
-# Load packages -----------------------------------------------------------------
+# Load packages ----------------------------------------------------------------
 library(tidyverse)
 library(rstan)
 library(shinystan)
@@ -60,22 +61,25 @@ dir.create(fig_spec_path)
 # Define variables--------------------------------------------------------------
 # years used in the model
 yr_0 <- 1990
-yr_last <- 2017 #Assume 2017 data have been entered
-nyears <-  yr_last-yr_0  #nyears not including year 0.
+yr_last <- 2017
+nyears <-  yr_last-yr_0  #number of years not including year 0.
 
 # Get M data-----------------------------------------------------------------------
 
-
-# functions to make region and yr splits. Currently works for any variables that
-# are matrices in the model, where year are the row var and regions (NOAA codes)
-# are the column Variables. The notatation, though are the model index notation
+# Split_to_Yr_Reg:
+# Function to get te region or year indices. 
+# Currently works for any variables that are matrices in the model, where year 
+#   are the row var (index starts at 1) and regions (NOAA codes, but with model 
+#   notation, so indices starte at 1) are the column variables.
 # Inputs are:
-# expr, the variable with indices string to pull info from.
-# var, which can be "yr" or "reg", depending on which index is desired.
-# returns: a vector (or single value, depending on input) that is a string
-# containing the yr or region number, as specified in the model.
+# expr: a character vector, of the form parameter_name[yr,reg], where 
+#   parameter_name is the name of the parameter from the stan model and  yr and 
+#   reg are the yr and reg indices for the parameter.
+# var:  which can be "yr" or "reg", depending on which index is desired.
+# This function returns: a vector (or single value, depending on input) that is 
+# a string containing the yr or region number, as specified in the model.
 
-split_to_yr_reg_2 <- function(expr, var = "yr"){
+Split_to_Yr_Reg <- function(expr, var = "yr") {
   # check input
   if(!var %in% c("yr","reg")) stop("var must 'yr' or 'reg'")
   #split the extpression
@@ -99,15 +103,16 @@ split_to_yr_reg_2 <- function(expr, var = "yr"){
   return(tmp_str)
 }
 
+# get estimates of natural mortality from the model
  M_mod <- mod_sum %>%
               rename(par = X) %>% # rename the col containing parameter and index
-              filter(str_detect(par, "M")) %>% # get only the M estimates
-              mutate(ModYr = split_to_yr_reg_2(par, var = "yr"))%>%  # put yr in separate col
+              filter(str_detect(par, "M")) %>% # get only the estimates for natural mortality
+              mutate(ModYr = Split_to_Yr_Reg(par, var = "yr"))%>%  # put yr in separate col
               mutate(ModYr = as.integer(ModYr)) %>% 
-              mutate(ModReg = split_to_yr_reg_2(par, var = "reg")) %>% # put reg in separate col
+              mutate(ModReg = Split_to_Yr_Reg(par, var = "reg")) %>% # put model region in separate col
               mutate(ModReg = as.integer(ModReg))
 
-# Get Box count estimates
+# Get Box count M estimates
   #calculate the box count method (DNR way)
   M_box <- raw_mod_dat %>% 
                   #filter(NOAACode == NOAA_vec[i]) %>%  # for region 1/ NOAA code 192
@@ -117,82 +122,106 @@ split_to_yr_reg_2 <- function(expr, var = "yr"){
                   group_by(ModYr, NOAACode) %>% # group data by year
                   summarize(BoxCount = mean(SampleBoxCount)) %>%  # take the avg of box count for each year. 
                   mutate(Year = ModYr + yr_0) # get actual year.
-
-  # Add real year and NOAA code to the M data, and bind model M and box count M.
+  
+# Add real year (starting at yr_0) and NOAA code to the M data
 ModReg_NOAA <- bar_reg_key %>% 
                   select(ModReg, NOAACode) %>% 
                   unique()
-  
 M_mod <- left_join(M_mod, ModReg_NOAA, by = "ModReg")
 # join box count and model M estimates
 M_dat<- full_join(M_mod, M_box, by = c("NOAACode", "ModYr")) %>% 
           rename(NOAA_code = NOAACode)
-# add region information
+# add region information (broader regions, not the model regions that are at the
+# NOAA code level)
 M_dat <- left_join(M_dat, regions, by = "NOAA_code")
 
-#add factors for plotting
+#add a NOAA code factors for plotting (useful for ordering plots)
 M_dat$NOAA_code_fac <- factor(M_dat$NOAA_code, 
                               levels = regions$NOAA_code, 
                               labels = paste0("NOAA Code ", regions$NOAA_code, ":\n", regions$NOAA_Name_Short))
  
-# #export as .csv
-# write.csv(M_dat, paste0("./models_and_derived_data/", folder_name, "/M_dat_mod_boxcount.csv"), row.names = F)
+#export as .csv
+
+write.csv(M_dat, paste0(der_dat_spec_path, "/M_dat_mod_boxcount.csv"), row.names = F)
 
 # Plot model and box count M by NOAA code --------------------------------------
 
-# #Plot M
 #Make axis labels
 lab <- as.character(1991:2017)
 lab[c(2,3,4,5,7,8,9,10,12,13,14,15,17,18,19,20,22,23,24,25,27)] <- "" #only label every 5. 
 
+# make dataframe nested, and then use map function to create ggplots by NOAA
+# code. Also added R_regions as a grouping variable, which is useful for making
+# the regional panel plots.
 plots <-  M_dat %>%
   group_by(NOAA_code_fac, R_region) %>%
   nest() %>%
   mutate(plot = map2(data, NOAA_code_fac, ~ggplot(data = .x) +
+      # line connecting median model results
       geom_line(aes(x = Year, y = X50.),color = "#9ad0f3")+
-      geom_linerange(aes(x = Year, ymin = X2.5., ymax = X97.5.), color = "black")+ #whiskers for mort. model results
-      geom_crossbar(aes(x = Year, y = X50., ymin = X25., ymax = X75.), color = "black", fill = "#9ad0f3", width =0.5)+ #box for mort. model results
-      geom_point(aes(x = Year, y = BoxCount), shape = 21, fill = "red", color = "black", size =2)+ # box count mortality.
+      #whiskers for mort. model results
+      geom_linerange(aes(x = Year, ymin = X2.5., ymax = X97.5.), color = "black")+ 
+      # box for mortality model results.
+      geom_crossbar(aes(x = Year, y = X50., ymin = X25., ymax = X75.), color = "black", fill = "#9ad0f3", width =0.5)+
+      # points of box count mortality
+      geom_point(aes(x = Year, y = BoxCount), shape = 21, fill = "red", color = "black", size =2)+
       #Need to modify below here to be specific for this plot:
-      scale_y_continuous(expand = c(0.01,0), limits = c(0,1))+
+      scale_y_continuous(expand = c(0.01,0), limits = c(0,1))+ # defined y axis limits
       scale_x_continuous(expand = c(0.01,0), #to get rid of the x axis space before the first year.
         breaks = 1991:2017,#c(2000,2005,2010,2015), #specify where labels go
-        labels =  lab#c("2000-\n2001", "2005-\n2006", "2010-\n2011", "2015-\n2016")#labely by fishing season.
-      )+
+        labels =  lab
+      ) +
       theme_classic(base_size = 12)+
       theme(
-        aspect.ratio = 4/6,
-        plot.title = element_text(hjust = 0.5, size = 10), #center
-        axis.title.x = element_blank(),         #No x axis lab
-        axis.title.y = element_blank())+        #no y axis lab
-      ggtitle(.y)))%>%
-  dplyr::arrange(NOAA_code_fac)
+            aspect.ratio = 4/6,
+            plot.title = element_text(hjust = 0.5, size = 10), #center
+            axis.title.x = element_blank(),         #No x axis lab
+            axis.title.y = element_blank())+        #no y axis lab
+      ggtitle(.y)))%>% # Add a title for each noaa code
+  dplyr::arrange(NOAA_code_fac) # order the rows by the NOAA code factor
 
-#add names to the ggplots by NOAA code
+# add names to the ggplots by NOAA code
 tmpnames <- arrange(M_dat, NOAA_code_fac) #order the NOAA code by factor
 tmpnames <- unique(tmpnames$NOAA_code) #this should be the same order as the ggplots
 names(plots$plot) <- tmpnames #assign these names to the plot
 
+# save the plots individually as png -------------------------------------------
 fig_names <- names(plots$plot)
-# Save plots individually
 file_names <- paste0(fig_spec_path, "/NOAACode_", fig_names, "_M.png")
-map2(file_names, plots$plot,  ggplot2::ggsave, device = "png",  height = 4.58, width = 6.06)
+purrr::map2(file_names, plots$plot,  ggplot2::ggsave, device = "png",  height = 4.58, width = 6.06)
 
 # Layout M by NOAA code for each region using Cowplot --------------------------
 #make plots using cowplot as done with the reference point plots. use the same dimensions.
 
+# Plot_By_Region function
+# For a specified region, make all the ggplots in the same png.
+# arguments are:
+# all_plots_df: a nested dataframe which includes a column of ggplots called plot
+# R_region_name: a character single value, the region to be plotted, which will 
+#   be matched with values with the R_region column of all_plots_df.
+# plot_title_text: A character single value, a title for the entire plot.
+# file_path: a character single value. where to save the plot, does not include
+#  the file name
 
-Plot_By_Region <- function(all_plots_df, R_region_name, plot_title_text ="", file_path){
+Plot_By_Region <- function(all_plots_df, 
+                           R_region_name,
+                           plot_title_text ="", 
+                           file_path) {
+  # specify necessary packages
   require(dplyr)
+  require(cowplot)
   reg_plots <- dplyr::filter(all_plots_df, R_region == R_region_name)
   reg_plot_list <- reg_plots$plot # get all plots in a list
-  labs <- LETTERS[1:length(reg_plot_list)] # add leter labesl on the plots
-  #make the cowplot
-  tmp_plot_1 <- plot_grid(plotlist = reg_plot_list,labels = labs, ncol = 3)
-  # add A years annoatation
+  labs <- LETTERS[1:length(reg_plot_list)] # add letter labels on the plots
+  #make the cowplot (no title or labels yet)
+  tmp_plot_1 <- cowplot::plot_grid(plotlist = reg_plot_list,labels = labs, ncol = 3)
+  # add years annoatation
   # specify sizes depending on nrows (size of the ouput graphic and relative 
   # heights for plots
-  n_row <- ceiling(length(reg_plot_list)/3) #nrows in the final plot. 
+  n_row <- ceiling(length(reg_plot_list)/3) # nrows in the final plot.
+  # specify the relative heights of each plot_grid object, as well as the 
+  # overall device height. This varies based upon 1-3 rows, assuming 3 plots
+  # per row. This code will not work for more than 9 plots.
   if (n_row == 1){
     rel_heights <-  c(0.15, 1, 0.09)
     plot_height <- 2.679
@@ -205,11 +234,13 @@ Plot_By_Region <- function(all_plots_df, R_region_name, plot_title_text ="", fil
   } else {
     stop("This code is only set to handle up to 9 plots.")
   }
-  title <- ggdraw() + draw_label(plot_title_text, x = 0.16, y = 0.5, fontface = "italic", size = 14)
-  xaxislab <- ggdraw() + draw_label("Year", size = 12)
-  yaxislab <- ggdraw() + draw_label("Annual M", size = 12, angle = 90)
-  tmp_plot_2 <- plot_grid(title, tmp_plot_1, xaxislab, rel_heights = rel_heights, ncol = 1)
-  final_plot <- plot_grid(yaxislab, tmp_plot_2, ncol = 2, rel_widths = c(0.05, 1))
+  # add title, and x and y axis labels to the cowplot.
+  title      <- cowplot::ggdraw() + cowplot::draw_label(plot_title_text, x = 0.16, y = 0.5, fontface = "italic", size = 14)
+  xaxislab   <- cowplot::ggdraw() + cowplot::draw_label("Year", size = 12)
+  yaxislab   <- cowplot::ggdraw() + cowplot::draw_label("Annual M", size = 12, angle = 90)
+  tmp_plot_2 <- cowplot::plot_grid(title,    tmp_plot_1, xaxislab, rel_heights = rel_heights, ncol = 1)
+  # put together the final plot.
+  final_plot <- cowplot::plot_grid(yaxislab, tmp_plot_2, ncol = 2, rel_widths = c(0.05, 1))
   
   #save the plot
   png(paste0(file_path, "/", R_region_name, "_M.png"), res = 300, width = 6.5*1.5, height = plot_height*1.5, units = "in")
@@ -217,9 +248,9 @@ Plot_By_Region <- function(all_plots_df, R_region_name, plot_title_text ="", fil
   dev.off()
 }
 
-#create the plots by broad regions
+#create the plots by broad regions( make 1 per region)
 region_names <- unique(regions$R_region) #get region names
-#make the plots and save.
+# use Plot_By_Region function make the plots and save.
 purrr::map(region_names, ~Plot_By_Region(R_region_name = .x, all_plots_df = plots, file_path = fig_spec_path ))
 
 # Plot Mean and sd of median M on CB map ---------------------------------------
