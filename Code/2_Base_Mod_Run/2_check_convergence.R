@@ -31,11 +31,11 @@ NOAA_vec <- NOAA_vec$x
 der_dat_gen_path <- "./Derived_Data/2_Base_Mod_Run"
 # subfolder for this script:
 der_dat_spec_path <- paste0(der_dat_gen_path, "/2_check_convergence")
-fig_gen_path <- "./Figs/2_Base_Mod_Run"
-fig_spec_path <- paste0(fig_gen_path, "/2_check_convergence")
+# fig_gen_path <- "./Figs/2_Base_Mod_Run"
+# fig_spec_path <- paste0(fig_gen_path, "/2_check_convergence")
 # make the folders (gen folders should already exist)
 dir.create(der_dat_spec_path)
-dir.create(fig_spec_path) 
+# dir.create(fig_spec_path) 
 
 # Elapsed time -----------------------------------------------------------------
 # #see how long sampling took
