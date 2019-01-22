@@ -5,10 +5,9 @@
 # Written 17 Jan 2019 by Kathryn Doering
 # 
 # TODO: 
-# create median plots by year on map, (modify code below 264)
-# (find way to make into gif within R), 
-# create plots of the mean/sd of median on map,
-# Think about other ways to visualize these results? (EEE last section for some thoughts.)
+# make plots into a gif from R
+# convert objects into lat/lon proj so that x/y axes are not in northing and easting.
+# Think about other ways to visualize these results? (see last section for some thoughts.)
 
 # Clear global env--------------------------------------------------------------
 # 
