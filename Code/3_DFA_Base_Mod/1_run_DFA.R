@@ -78,44 +78,73 @@ Med_M_mat <- matrix(Med_M$M_Med_Inst, nrow = nyears, ncol = length(unique(Med_M$
 rownames(Med_M_mat) <- yr_1:yr_max
 colnames(Med_M_mat) <- unique(Med_M$NOAA_code)
 
-dat_wide_no_Z <- t(Med_M_mat) #transpose because we want each row to be a different nooa code and each year in a different column. 
+dat_wide_no_Z <- t(Med_M_mat) #transpose because we want each row to be a different NOAA code and each year in a different column. 
 
-NOAA <- rownames(dat_wide_no_Z)
-#Calculate the z scores for the data, which will make the model easier to run.
+NOAA <- rownames(dat_wide_no_Z) # Save the ordered NOAA codes.
+
+# Calculate the z scores for the data, which will make the model easier to run.
 mean <- apply(dat_wide_no_Z, 1, mean, na.rm = T) #means for each row
 sd <-   apply(dat_wide_no_Z, 1, sd, na.rm = T) #standard dev for each row
 
-#get the z score by subtracting the mean from each value and then divided by the sd
+# Get the z score by subtracting the mean from each value and then divided by the sd
 dat_wide <- (dat_wide_no_Z - mean)/sd
 
-## get number of time series
+# Get number of time series
 N_ts <- dim(dat_wide)[1]
-## get length of time series
-TT <- dim(dat_wide)[2]
 
 # Plot DFA input ---------------------------------------------------------------
-# plot zscored and non-zscored data
-#Plot the data (zscored and demeaned). separtely each on its own plot.
-#NOAA <- rownames(dat_wide)
-#clr <- c("brown", "blue", "darkgreen", "darkred", "purple")
-count <- 1
+# plot both zscored (used in the analysis) and non-zscored data
+# 
+# Plot the data (zscored and demeaned). separtely each on its own plot, but the
+# same device.
+Plot_Data_Sep <- function(dat_wide, yr_1){
+  function(NOAA_code){
+    plot(dat_wide[NOAA_code, ], xlab = "", ylab = "M index (Z-transformed)", bty = "L",
+      xaxt = "n", pch = 16,
+      type = "b")
+    axis(1, 0:dim(dat_wide)[2] + 1, yr_1 + 0:dim(dat_wide)[2])
+    title(NOAA_code)
+  }
+}
+# Make a closure from Plot_Data_Sep function to use with lapply
+Plot_Data_Sep_Clos <- Plot_Data_Sep(dat_wide = dat_wide, yr_1 = yr_1)
+
 png(paste0(fig_spec_path,"/inst_ts_zscored.png"), res = 300, width = 10, height =60, units = "in")
 par(mfrow = c(N_ts, 1), mai = c(0.5, 0.7, 0.1, 0.1), omi = c(0,
   0, 0, 0))
-for (i in NOAA) {
-  plot(dat_wide[i, ], xlab = "", ylab = "M index (Z-transformed)", bty = "L",
-    xaxt = "n", pch = 16,
-    type = "b")
-  axis(1, 0:dim(dat_wide)[2] + 1, yr_1 + 0:dim(dat_wide)[2])
-  title(i)
-  count <- count + 1
-}
+lapply(NOAA, Plot_Data_Sep_Clos) # use the Plot_Data_Sep_2 closure to plot.
 dev.off()
 
-#plot all the code together.
-#Alpha is used to add transparency; darker portions are where lines overlay each other,
-#Where as single lines are shown in gray. 
-#must use png, bmp, or jpeg for this to show up
+# plot all the code together.
+# Alpha is used to add transparency; darker portions are where lines overlay each other,
+# Where as single lines are shown in gray. 
+# must use png, bmp, or jpeg for trancparency to show up
+# formals are:
+# dat_mat: numeric data to plot in a matrix where rows are NOAACOdes and cols are years
+# file_name: a string with .png extension specifying the name and file path where
+#   the plot wil be saved.
+# ylab: text for the y axis of the plot (a character single value.)
+Plot_All <- function(dat_mat, file_name, ylab){
+    NOAA <- row.names(dat_mat) # get 
+    png(file_name, res = 300, width = 8, height = 4, units = "in")
+    par(xaxs="i", yaxs="i")
+    plot(dat_mat[1, ], xlab = "Year", ylab = ylab, bty = "L",
+      xaxt = "n", ylim = c(min(dat_mat)-0.1, max(dat_mat)+0.1), col = alpha("black", 0.5),
+      type = "l", lwd = 2)
+    axis(1, 1:nyears, yr_1:yr_max)
+    # plot the lines
+    lapply(seq_along(NOAA[-1]), function(N) lines(dat_mat[N, ], col = alpha("black", 0.5), lwd = 2))
+    dev.off()
+}
+# Plot the z scored data
+Plot_All(NOAA= NOAA, dat_mat = dat_wide, file_name = paste0(fig_spec_path,"/inst_ts_zscored_together.png"), ylab = "M index (Z-transformed)")
+# Plot the non-z-scored data.
+Plot_All(NOAA= NOAA, dat_mat = dat_wide_no_Z, file_name = paste0(fig_spec_path,"/inst_ts_not_zscored_together.png"), ylab = "M (instantaneous)")
+
+# plot all the code together.
+# Alpha is used to add transparency; darker portions are where lines overlay each other,
+# Where as single lines are shown in gray. 
+# must use png, bmp, or jpeg for trancparency to show up
 png(paste0(fig_spec_path,"/inst_ts_zscored_together.png"), res = 300, width = 8, height = 4, units = "in")
 #par(mai = c(0.5, 0.7, 0.1, 0.1), omi = c(0,0, 0, 0))
 par(xaxs="i", yaxs="i")
@@ -123,9 +152,8 @@ plot(dat_wide[1, ], xlab = "Year", ylab = "M index (Z-transformed)", bty = "L",
   xaxt = "n", ylim = c(min(dat_wide)-0.1, max(dat_wide)+0.1), col = alpha("black", 0.5),
   type = "l", lwd = 2)
 axis(1, 1:nyears, yr_1:yr_max)
-for (i in 2:length(NOAA)) {
-  lines(dat_wide[i, ], col = alpha("black", 0.5), lwd = 2)
-}
+# plot the lines
+lapply(seq_along(NOAA[-1]), function(N) lines(dat_wide[N, ], col = alpha("black", 0.5), lwd = 2))
 dev.off()
 
 #Also plot non-zscored data
