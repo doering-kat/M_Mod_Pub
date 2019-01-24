@@ -121,6 +121,7 @@ for (i in 1:nrow(sens_runs_pars)) {
   
   # delete model (to reduce obj in workspace) ----------------------------------
   rm(mod)
+  print(paste0("Finished model run ", i))
 }
 
 # Save files that do not differ across models ----------------------------------
