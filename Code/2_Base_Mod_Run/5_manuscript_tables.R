@@ -31,7 +31,7 @@ nbars <- bar_reg_key %>%
            rename(NOAA_code = NOAACode) %>% 
            rename(nbars = n) # rename cols
 # add region information
-nbars_df <- left_join(regions[,c("Region_name", "NOAA_code")], nbars, by = "NOAA_code")
+nbars_df <- left_join(regions[,c("Region_name", "NOAA_code", "NOAA_Name_Short")], nbars, by = "NOAA_code")
 nbars_df$NOAA_code <- as.character(nbars_df$NOAA_code) # make character
 
 # M table ----------------------------------------------------------------------
