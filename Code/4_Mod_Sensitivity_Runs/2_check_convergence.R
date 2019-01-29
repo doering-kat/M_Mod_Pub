@@ -15,7 +15,7 @@ library(rstan)
 options(stringsAsFactors = F)
 # Load Data --------------------------------------------------------------------
 #Load model and data associated with it: for all runs.
-run_mod_path <- "./Derived_Data/4_Mod_Sensitivity_Runs/1_run_mod"
+run_mod_path <- "./Derived_Data/4_Mod_Sensitivity_Runs/1_run_mods"
 # bar_reg_key <- read.csv(paste0(run_mod_path, "/bar_reg_key.csv"))
 # raw_mod_dat <- read.csv(paste0("./models_and_derived_data/", folder_name, "/raw_dat.csv"))
 
@@ -64,12 +64,14 @@ for(i in 1:length(mods)){
 # Want all parameters to have effective sample sizes (neff) >1000
 # TODO: Edit below here to run for all models.
 # get param summaries, includes neff and rhat
-all_par_summary <-purrr::map(mods, ~summary(.x)$summary)
+
+all_par_summary <-purrr::map(mods, summary)
+all_par_summary <- purrr::map(all_par_summary, "summary")
 base_mod_summary <- summary(base_mod)$summary
 
 # Rhat
-# put all rhat values in a vector and check
-all_par_rhat <- purrr::map(all_par_summary, "Rhat")
+# put all rhat values in a vector and check (fix this)
+all_par_rhat <- purrr::map(all_par_summary, ~.x[ ,"Rhat"])
 # warn if there are r hat values above 1.1
 max_rhat <- map_dbl(all_par_rhat, max)
 
@@ -77,23 +79,36 @@ if( any(max_rhat > 1.1)) warning("There are Rhat values > 1.1")
 
 # neff
 # put all n_effective values in a vector and check
-all_par_neff <- purrr::map(all_par_summary, "n_eff")
+all_par_neff <- purrr::map(all_par_summary, ~.x[,"n_eff"])
 
 # see if neff is adequate.
-min_neff <- map_dbl(all_par_n_eff, min) # Hopefully, all above 1,000. (or close to 1,000)
+min_neff <- map_dbl(all_par_neff, min) # Hopefully, all above 1,000. (or close to 1,000)
 
-if(any(min_n_eff < 1000)) warning("There were parameters with neff < 1000")
-
+if(any(min_neff < 1000)) warning("There were parameters with neff < 1000")
+prob_mods <- which(min_neff< 1000)
 # write summary to a file ------------------------------------------------------
 # add new col to distinguish models apart and combine into 1 dataframe.
-all_par_summary_df <- map2_dfr(all_par_summary, 
-                               paste0("R_eff", round(sens_runs_pars$R_eff, 2), 
-                                      "frac_d_prev_", round(sens_runs_pars$frac_d_prev, 1)
-                                      ), 
+tmp_rownames  <- map(all_par_summary, row.names) 
+tmp_rownames <- map(tmp_rownames, ~data.frame(param = .x)) 
+
+all_par_summary_df <- purrr::map(all_par_summary, data.frame) # convert to df
+# add rownames as a col
+all_par_summary_df  <- purrr::map2(all_par_summary_df, tmp_rownames, ~bind_cols(.x, .y) )
+
+all_par_summary_df <- map2_dfr(all_par_summary_df, 
+                               paste0("R_eff_", round(sens_runs_pars$R_eff, 2), 
+                                      "_frac_d_prev_", round(sens_runs_pars$frac_d_prev, 1)
+                                      ),
                                 ~mutate(.x, Model = .y)# add new col
                                 )
-base_mod_summary$Model <- "Base"
+rownames_base <- row.names(base_mod_summary)
+rownames_base <- data.frame(param = rownames_base)
+
+base_mod_summary_df <- data.frame(base_mod_summary) %>% 
+                         bind_cols(rownames_base)
+
+base_mod_summary_df$Model <- "Base"
 # add base model summary
-all_par_summary_df <- bind_rows(all_par_summary_df, base_mod_summary)
+all_par_summary_df <- bind_rows(all_par_summary_df, base_mod_summary_df)
 
 write.csv(all_par_summary_df, paste0(der_dat_spec_path, "/all_mod_summary.csv"),row.names = T)
