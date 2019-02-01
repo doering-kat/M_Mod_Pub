@@ -188,3 +188,6 @@ for(i in model_names){
   hist(Med_diff[Med_diff$Model == i, "diff"], main = i, xlab = "Diff from base in Median M")
 }
 dev.off()
+
+# save the model summary with the model reruns----------------------------------
+write.csv(final_mod_sum, paste0(der_dat_spec_path, "/mods_sum_with_reruns.csv"))
