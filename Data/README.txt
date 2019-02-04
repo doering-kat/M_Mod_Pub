@@ -1,5 +1,12 @@
 Data readme
-
+# ------------------------------------------------------------------------------------------------------
+KD 4 Feb 2019
+Added TMBresults.csv to folder.
+This was copied from:
+C:\Users\Kathryn Doering\Documents\Masters\Project\Masters_R_Directory\Oyster_Stock_Assessment\Data
+And was originally from:
+C:\Users\Kathryn Doering\Documents\Masters\Lab meeting\Oyster_Assessment_Model_2018\oyster_model_9v9_July_7_2018\Model_Results_Wed_Jul_04_06.50.30_2018
+These are the results of the oyster stock assessment run for DNR, done in 2018. 
 # ------------------------------------------------------------------------------------------------------
 KD 21 Jan 2019
 Added CB_spatial objects folder.
