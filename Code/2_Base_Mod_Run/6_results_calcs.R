@@ -115,7 +115,7 @@ sink()
 # Averages by region -----------------------------------------------------------
 
 # these are average calculations over specific periods. 
-
+sink(paste0(der_dat_spec_path, "/region_M_avgs.txt"))
 # Western Shore
 print("Western Shore, avg (annual) M during 1991-1999, 2003-2017: ")
 M_summary %>% 
@@ -148,7 +148,7 @@ M_summary %>%
   filter(Year == 2003) %>%
   select(X50.)
 # Eastern Bay
-# TODO: fill in here!!!
+
 print("Eastern Bay, avg during 2001-2002, 2007:  ")
 M_summary %>% 
   filter(R_region == "Eastern_Bay") %>% 
@@ -172,7 +172,16 @@ M_summary %>%
   filter(R_region == "Choptank") %>%
   filter(Year %in% 2003:2017) %>%
   summarize(mean = mean(X50.))
-
+print("Choptank, avg during 2002:  ")
+M_summary %>% 
+  filter(R_region == "Choptank") %>%
+  filter(Year == 2002) %>%
+  summarize(mean = mean(X50.))
+print("Choptank, avg during 2003:  ")
+M_summary %>% 
+  filter(R_region == "Choptank") %>%
+  filter(Year == 2003) %>%
+  summarize(mean = mean(X50.))
 # Pax
 print("Patuxent, avg during 1991-1992:  ")
 M_summary %>% 
@@ -197,11 +206,38 @@ M_summary %>%
   filter(Year %in% 1999:2000) %>%
   summarize(mean = mean(X50.))
 # Tangier Sound
-print("Potomac, avg during 1992 and 1999:")
+print("Tangier, avg during 1991-2006:")
 M_summary %>% 
-  filter(R_region == "Pot") %>%
-  filter(Year %in% c(1992,1999)) %>%
+  filter(R_region == "Tangier") %>%
+  filter(Year %in% 1991:2006) %>%
   summarize(mean = mean(X50.))
+
+print("Tangier, avg during 2007-2017:")
+M_summary %>% 
+  filter(R_region == "Tangier") %>%
+  filter(Year %in% 2007:2017) %>%
+  summarize(mean = mean(X50.))
+print("Tangier, avg during 1992, 1999:")
+M_summary %>% 
+  filter(R_region == "Tangier") %>%
+  filter(Year %in% c(1992, 1999)) %>%
+  summarize(mean = mean(X50.))
+print("Tangier, avg during 1995:")
+M_summary %>% 
+  filter(R_region == "Tangier") %>%
+  filter(Year == 1995) %>%
+  summarize(mean = mean(X50.))
+print("Tangier, avg during 1993:")
+M_summary %>% 
+  filter(R_region == "Tangier") %>%
+  filter(Year == 1993) %>%
+  summarize(mean = mean(X50.))
+print("Tangier, avg during 2011:")
+M_summary %>% 
+  filter(R_region == "Tangier") %>%
+  filter(Year == 2011) %>%
+  summarize(mean = mean(X50.))
+sink()
 
 # get correlations -------------------------------------------------------------
 # Get the correlations among time series of median natural mortality by NOAA code.
@@ -283,7 +319,7 @@ avgs_names <- c("M_Median_Avgs_NOAA_Code", "M_Median_Avgs_Region", "M_Median_Avg
 d <- mod_summary %>% 
         mutate(param_start = substr(X, start = 1, stop = 1)) %>% 
         filter(param_start == "d") %>% 
-        mutate(percent_disart_median = 1 - exp(-X50.))
+        mutate(frac_disart_median = 1 - exp(-X50.))
   sink(paste0(der_dat_spec_path, "/box_decay_rate.txt"))
   print(d)
   sink()
