@@ -144,7 +144,7 @@ M_dat$NOAA_code_fac <- factor(M_dat$NOAA_code,
 
 write.csv(M_dat, paste0(der_dat_spec_path, "/M_dat_mod_boxcount.csv"), row.names = F)
 
-# Plot model and box count M by NOAA code --------------------------------------
+# Plot model and box count M by NOAA code (boxplots) ---------------------------
 
 #Make axis labels
 lab <- as.character(1991:2017)
@@ -206,7 +206,7 @@ purrr::map2(file_names, plots$plot,  ggplot2::ggsave, device = "png",  height = 
 Plot_By_Region <- function(all_plots_df, 
                            R_region_name,
                            plot_title_text ="", 
-                           file_path) {
+                           file_path, filetext = "boxplot") {
   # specify necessary packages
   require(dplyr)
   require(cowplot)
@@ -243,7 +243,7 @@ Plot_By_Region <- function(all_plots_df,
   final_plot <- cowplot::plot_grid(yaxislab, tmp_plot_2, ncol = 2, rel_widths = c(0.05, 1))
   
   #save the plot
-  png(paste0(file_path, "/", R_region_name, "_M.png"), res = 300, width = 6.5*1.5, height = plot_height*1.5, units = "in")
+  png(paste0(file_path, "/", R_region_name,"_",filetext, "_M.png"), res = 300, width = 6.5*1.5, height = plot_height*1.5, units = "in")
   print(final_plot)
   dev.off()
 }
@@ -252,7 +252,58 @@ Plot_By_Region <- function(all_plots_df,
 region_names <- unique(regions$R_region) #get region names
 # use Plot_By_Region function make the plots and save.
 purrr::map(region_names, ~Plot_By_Region(R_region_name = .x, all_plots_df = plots, file_path = fig_spec_path ))
+# M by NOAA lines ---------------------------------------------------------------
+#Make axis labels
+lab <- as.character(1991:2017)
+lab[c(2,3,4,5,7,8,9,10,12,13,14,15,17,18,19,20,22,23,24,25,27)] <- "" #only label every 5. 
 
+# make dataframe nested, and then use map function to create ggplots by NOAA
+# code. Also added R_regions as a grouping variable, which is useful for making
+# the regional panel plots.
+plots_line <-  M_dat %>%
+  group_by(NOAA_code_fac, R_region) %>%
+  nest() %>%
+  mutate(plot = map2(data, NOAA_code_fac, ~ggplot(data = .x) +
+      # 95% CIS
+      geom_ribbon(aes(x = Year, ymin = X2.5., ymax = X97.5.), fill = "gray80")+
+      # the 25t and 75th percentiles
+      geom_ribbon(aes(x = Year, ymin = X25., ymax = X75.), fill = "gray60")+
+      # line connecting median model results
+      geom_line(aes(x = Year, y = X50.),color = "gray20")+
+      # points of box count mortality
+      geom_point(aes(x = Year, y = BoxCount), shape = 21, fill = "black", color = "black", size =2)+
+      #Need to modify below here to be specific for this plot:
+      scale_y_continuous(expand = c(0.01,0), limits = c(0,1))+ # defined y axis limits
+      scale_x_continuous(expand = c(0.01,0), #to get rid of the x axis space before the first year.
+        breaks = 1991:2017,#c(2000,2005,2010,2015), #specify where labels go
+        labels =  lab
+      ) +
+      theme_classic(base_size = 12)+
+      theme(
+        aspect.ratio = 4/6,
+        plot.title = element_text(hjust = 0.5, size = 10), #center
+        axis.title.x = element_blank(),         #No x axis lab
+        axis.title.y = element_blank())+        #no y axis lab
+      ggtitle(.y)))%>% # Add a title for each noaa code
+  dplyr::arrange(NOAA_code_fac) # order the rows by the NOAA code factor
+
+# add names to the ggplots by NOAA code
+tmpnames_line <- arrange(M_dat, NOAA_code_fac) #order the NOAA code by factor
+tmpnames_line <- unique(tmpnames_line$NOAA_code) #this should be the same order as the ggplots
+names(plots_line$plot) <- tmpnames_line #assign these names to the plot
+
+# save the line plots individually as png --------------------------------------
+fig_names_line <- names(plots_line$plot)
+file_names_line <- paste0(fig_spec_path, "/NOAACode_", fig_names_line, "_lineplot_M.png")
+purrr::map2(file_names_line, plots_line$plot,  ggplot2::ggsave, device = "png",  height = 4.58, width = 6.06)
+
+# Layout M by NOAA code line plots for each region using Cowplot ---------------
+#make plots using cowplot as done with the reference point plots. use the same dimensions.
+
+#create the plots by broad regions( make 1 per region)
+region_names <- unique(regions$R_region) #get region names
+# use Plot_By_Region function make the plots and save.
+purrr::map(region_names, ~Plot_By_Region(R_region_name = .x, all_plots_df = plots_line, file_path = fig_spec_path, filetext = "lineplot"))
 # Plot median by year on CB map ------------------------------------------------
 # Get annualized median by year and NOAA code values
 # Save in object M_df
@@ -393,7 +444,7 @@ Plot_M_Map(M = Avg_SD_M_df, NOAA = NOAA, colname = "SD", filepath = fig_spec_pat
 
 # TODO: may need to add key, and axes; may need to switch to converting objects to lat/long (change function.)
 
-# Other analyses ---------------------------------------------------------------
+# other plots ---------------------------------------------------------------
 
 # Think of other ways to plot mortality (any way to synthesize in the paper?)---
 # Individual plots take up a lot of space! Perhaps there is a better way to show
