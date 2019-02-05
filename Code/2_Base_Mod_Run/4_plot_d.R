@@ -47,8 +47,8 @@ f_theta <- dnorm(theta, mean = d_dist[1], sd = d_dist[2])
 
 # Model estimate and prior.
 
-png(paste0(fig_spec_path,"/d_prior_post.png"), 
-  res = 300, width = 6, height = 4, units = "in") # 8.5, height = 11, units = "in")
+pdf(paste0(fig_spec_path,"/d_prior_post.pdf"), 
+  width = 6, height = 4) # 8.5, height = 11, units = "in")
 par(yaxs="i", bty = "n")
 hist(mod_sim$d,
   freq = FALSE,
