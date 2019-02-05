@@ -108,7 +108,7 @@ Plot_Data_Sep <- function(dat_mat, yr_1){
 # Make a closure from Plot_Data_Sep function to use with lapply
 Plot_Data_Sep_Clos <- Plot_Data_Sep(dat_mat = dat_wide, yr_1 = yr_1)
 
-png(paste0(fig_spec_path,"/inst_ts_zscored.png"), res = 300, width = 10, height =60, units = "in")
+pdf(paste0(fig_spec_path,"/inst_ts_zscored.pdf"), width = 10, height =60)
 par(mfrow = c(N_ts, 1), mai = c(0.5, 0.7, 0.1, 0.1), omi = c(0,
   0, 0, 0))
 lapply(NOAA, Plot_Data_Sep_Clos) # use the Plot_Data_Sep_2 closure to plot.
@@ -128,7 +128,7 @@ dev.off()
 # returns: NA
 Plot_All <- function(dat_mat, file_name, ylab){
     NOAA <- row.names(dat_mat) # get 
-    png(file_name, res = 300, width = 8, height = 4, units = "in")
+    pdf(file_name, width = 8, height = 4)
     par(xaxs="i", yaxs="i")
     plot(dat_mat[1, ], xlab = "Year", ylab = ylab, bty = "L",
       xaxt = "n", ylim = c(min(dat_mat)-0.1, max(dat_mat)+0.1), col = alpha("black", 0.5),
@@ -140,9 +140,9 @@ Plot_All <- function(dat_mat, file_name, ylab){
     return()
 }
 # Plot the z scored data
-Plot_All(dat_mat = dat_wide, file_name = paste0(fig_spec_path,"/inst_ts_zscored_together.png"), ylab = "M index (Z-transformed)")
+Plot_All(dat_mat = dat_wide, file_name = paste0(fig_spec_path,"/inst_ts_zscored_together.pdf"), ylab = "M index (Z-transformed)")
 # Plot the non-z-scored data.
-Plot_All(dat_mat = dat_wide_no_Z, file_name = paste0(fig_spec_path,"/inst_ts_not_zscored_together.png"), ylab = "M (instantaneous)")
+Plot_All(dat_mat = dat_wide_no_Z, file_name = paste0(fig_spec_path,"/inst_ts_not_zscored_together.pdf"), ylab = "M (instantaneous)")
 
 # Estimate and save  DFA models ------------------------------------------------
 # Code to compare multiple models. use the MARSS package to estimate.
