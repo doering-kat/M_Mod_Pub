@@ -1,13 +1,8 @@
 # Header -----------------------------------------------------------------------
-# Plot natural mortality (M) from the model in various ways. Plot also to 
+# Plot natural mortality (M) from the model by year. Plot also to 
 # compare with the box count method. 
 # 
 # Written 17 Jan 2019 by Kathryn Doering
-# 
-# TODO: 
-# make plots into a gif from R
-# convert objects into lat/lon proj so that x/y axes are not in northing and easting.
-# Think about other ways to visualize these results? (see last section for some thoughts.)
 
 # Clear global env--------------------------------------------------------------
 # 
@@ -185,16 +180,16 @@ tmpnames <- arrange(M_dat, NOAA_code_fac) #order the NOAA code by factor
 tmpnames <- unique(tmpnames$NOAA_code) #this should be the same order as the ggplots
 names(plots$plot) <- tmpnames #assign these names to the plot
 
-# save the plots individually as png -------------------------------------------
+# save the plots individually as pdf -------------------------------------------
 fig_names <- names(plots$plot)
-file_names <- paste0(fig_spec_path, "/NOAACode_", fig_names, "_M.png")
-purrr::map2(file_names, plots$plot,  ggplot2::ggsave, device = "png",  height = 4.58, width = 6.06)
+file_names <- paste0(fig_spec_path, "/NOAACode_", fig_names, "_M_boxplot.pdf")
+purrr::map2(file_names, plots$plot,  ggplot2::ggsave, device = "pdf",  height = 4.58, width = 6.06)
 
 # Layout M by NOAA code for each region using Cowplot --------------------------
 #make plots using cowplot as done with the reference point plots. use the same dimensions.
 
 # Plot_By_Region function
-# For a specified region, make all the ggplots in the same png.
+# For a specified region, make all the ggplots in the same pdf.
 # arguments are:
 # all_plots_df: a nested dataframe which includes a column of ggplots called plot
 # R_region_name: a character single value, the region to be plotted, which will 
@@ -243,7 +238,7 @@ Plot_By_Region <- function(all_plots_df,
   final_plot <- cowplot::plot_grid(yaxislab, tmp_plot_2, ncol = 2, rel_widths = c(0.05, 1))
   
   #save the plot
-  png(paste0(file_path, "/", R_region_name,"_",filetext, "_M.png"), res = 300, width = 6.5*1.5, height = plot_height*1.5, units = "in")
+  pdf(paste0(file_path, "/", R_region_name,"_",filetext, "_M.pdf"), width = 6.5*1.5, height = plot_height*1.5)
   print(final_plot)
   dev.off()
 }
@@ -292,10 +287,10 @@ tmpnames_line <- arrange(M_dat, NOAA_code_fac) #order the NOAA code by factor
 tmpnames_line <- unique(tmpnames_line$NOAA_code) #this should be the same order as the ggplots
 names(plots_line$plot) <- tmpnames_line #assign these names to the plot
 
-# save the line plots individually as png --------------------------------------
+# save the line plots individually as pdf --------------------------------------
 fig_names_line <- names(plots_line$plot)
-file_names_line <- paste0(fig_spec_path, "/NOAACode_", fig_names_line, "_lineplot_M.png")
-purrr::map2(file_names_line, plots_line$plot,  ggplot2::ggsave, device = "png",  height = 4.58, width = 6.06)
+file_names_line <- paste0(fig_spec_path, "/NOAACode_", fig_names_line, "_M_lineplot.pdf")
+purrr::map2(file_names_line, plots_line$plot,  ggplot2::ggsave, device = "pdf",  height = 4.58, width = 6.06)
 
 # Layout M by NOAA code line plots for each region using Cowplot ---------------
 #make plots using cowplot as done with the reference point plots. use the same dimensions.
@@ -304,156 +299,3 @@ purrr::map2(file_names_line, plots_line$plot,  ggplot2::ggsave, device = "png", 
 region_names <- unique(regions$R_region) #get region names
 # use Plot_By_Region function make the plots and save.
 purrr::map(region_names, ~Plot_By_Region(R_region_name = .x, all_plots_df = plots_line, file_path = fig_spec_path, filetext = "lineplot"))
-# Plot median by year on CB map ------------------------------------------------
-# Get annualized median by year and NOAA code values
-# Save in object M_df
-# Use these to plot. Below is older code, need to modify: 
-
-# Manipulate Data
-# rename columns and make sure NOAA code is a character in same form as spatial 
-#   objects.
-M_map_df <- M_dat %>%  #rename
-              select(Year, NOAA_code, `X50.`) %>% # select only necessary cols.
-              rename(NOAACODE = NOAA_code, M_annual = `X50.`) %>%  # rename cols
-              mutate(NOAACODE = as.character(NOAACODE)) %>% #convert to character
-              # change NOAA codes so it matches with spatial objects
-              mutate(NOAACODE = ifelse(nchar(NOAACODE) == 3, NOAACODE, 
-                ifelse(nchar(NOAACODE) == 2, paste0("0", NOAACODE),
-                  ifelse(nchar(NOAACODE) == 1, paste0("00", NOAACODE), 
-                    NOAACODE)))) 
-
-# Plot_M_Map: a function to plot natural mortality values on a spatial object for
-  # a given year. Function inputs are:
-# M, a dataframe with columns Year, M_annual, and NOAACODE
-# Yr, a single integer value with the year of M_annual to plot.
-# NOAA, an sp spatial polygon data.frame with the NOAACODE polygons.
-# lab, a single logical value. True if NOAA code labels are desired on the plot,
-#   or False if no labels are wanteed.
-# NOAAlab, an sp spatial points data.frame including the labels and where they should be placed.
-# axes: a signle logical value, true if want axes in northing and easting, false if not.
-# axes_lab: a single logical value, true if want x and y axis labels, false if not.
-# title: a single logical value, true if want the year as the title on the plot.
-# filepath: specify where the plots should be made. Does not include the filename.
-# filename: an optional name for  the file. should have extension ".png"
-# palette: a character vector of color names. length should be 1 less than palette breaks.
-# palette_breaks: a numeric vector specifying breaks in the scalebar. This can be 
-# specified or left as optional. If not specified, function will calculate by scaling
-# equally using the number of categories in the palette between 0 and 1.
-# returns: an sp plot object (also creates and saves plot in a graphic device.)
-
-Plot_M_Map <- function(M, colname = "M_Annual" , NOAA, lab = F, NOAAlab = NULL, 
-                       axes = F, axes_lab = F, title = T, title_text = "Year here", 
-                       filepath = ".", filename = NA, 
-                       palette = rev(RColorBrewer::brewer.pal(n = 10, name = "RdYlBu")), 
-                       palette_breaks = NULL) {
-  # List required packages -----------------------------------------------------
-  require(RColorBrewer)
-  require(sp)
-  require(grid)
-  require(tidyverse)
-  # Make spatialpolygondataframe -----------------------------------------------
-  
-  #add natural mortality values to the dataframe.
-  NOAA@data <- dplyr::left_join(NOAA@data, M, by = "NOAACODE")
-  
-  # Make the map using spplot --------------------------------------------------
-  # The color palette 
-  if(is.null(palette_breaks)){
-    palette_breaks <- seq(from = 0, to = 1, length.out = (length(palette)+1))
-  }
-  # check inputs
-  if (length(palette_breaks) != length(palette)+1){
-    stop("palette_breaks must have length() 1 more than palette_n value")
-  }
-  
-  # The NOAA code labels (if desired)
-  if(lab == T){
-    sl_labels <- list("sp.text", coordinates(NOAAlab), NOAAlab@data$Labels, cex = 0.7)
-  }
-  # make the list for axes or not
-  if (axes == T) {
-    scales_list <- list(draw = T)
-    par_settings_list <- list(fontsize = list(text = 20), axis.line = list(col = "black"))
-  } else {
-    scales_list <- list(draw = F)
-    par_settings_list <- list(fontsize = list(text = 20), axis.line = list(col = "transparent"))
-  }
-  # open the graphics device.
-  if(is.na(filename)){
-    png(filename = paste0(filepath, "/M_map.png"), width = 9, height = 11, units = "in", res = 300)
-  } else{
-    png(filename = paste0(filepath,"/", filename), width = 9, height = 11, units = "in", res = 300)
-  }
-  # create the pplot
-  plot <- sp::spplot(NOAA, #spatial object to plot
-                   zcol =  colname, #column name in the dataframe to fill.
-                   # year in title, if desired
-                   main = ifelse(title == T, list(label = title_text, cex = 1.2), list(NULL)),
-                   scales = scales_list,
-                   # plot limits:
-                   ylim = c(NOAA@bbox[2,1] - 3000, NOAA@bbox[2,2] + 3000), #+51000),
-                   xlim = c(NOAA@bbox[1,1] - 5000, NOAA@bbox[1,2] + 10000),
-                   # axis labels 
-                   ylab = ifelse(axes_lab == T, "Northing (m)", list(NULL)),
-                   xlab = ifelse(axes_lab == T, "Easting (m)", list(NULL)),
-                   col.regions = palette, #specify the colors
-                   at = palette_breaks, #specify the breaks fro the scale bar.
-                   col = "gray30", #specify the noaa code outline color
-                   sp.layout = ifelse(lab == T, list(sl_labels), list(NULL)),
-                   par.settings = par_settings_list
-                   )
-  plot <- plot + latticeExtra::layer_(sp.polygons(NOAA, fill='gray70')) # fill in other NOAA codes with gray.
-  print(plot) # to make visible in device
-  dev.off()
-  return(plot)
-}
-
-# Run plot function to get maps of M by year.
-for (y in 1991:2017) {
-  tmp_M <- dplyr::filter(M_map_df, Year == y) # just M for the year.
-  # define the color brewer palette.name))
-  Plot_M_Map(M = tmp_M, NOAA = NOAA, colname = "M_annual", 
-            filepath = fig_spec_path, filename = paste0("M_", y, ".png"), 
-            title_text = as.character(y))
-}
-
-# TODO: make into a gif from R!
-
-# Plot Mean and sd of median M on CB map ---------------------------------------
-# Use the Plot_M_Map function,
-# Calculate mean and sd of median values by NOAA code
-Avg_SD_M_df <- M_map_df %>% 
-                group_by(NOAACODE) %>% 
-                summarize(Mean = mean(M_annual), SD = sd(M_annual))
-
-# plot mean
-max_plot_avg <- ceiling(10*max(Avg_SD_M_df$Mean))/10 # the maximum value to plot
-n_plot_avg <- as.integer(max_plot_avg*10*2)
-avg_pal <- RColorBrewer::brewer.pal(n = n_plot_avg, name = "Oranges")
-avg_pal_breaks <- seq(from = 0, to = max_plot_avg, length.out = length(avg_pal)+1)
-Plot_M_Map(M = Avg_SD_M_df, NOAA = NOAA, colname = "Mean", filepath = fig_spec_path, 
-           filename = "M_Med_Mean_Map.png", title_text = "Mean", palette = avg_pal, palette_breaks = avg_pal_breaks )
-
-# plot SD
-max_plot_SD <- ceiling(10*max(Avg_SD_M_df$SD))/10 # the maximum value to plot
-n_plot_SD <- as.integer(max_plot_SD*10*2)
-SD_pal <- RColorBrewer::brewer.pal(n = n_plot_SD, name = "Greens")
-SD_pal_breaks <- seq(from = 0, to = max_plot_SD, length.out = length(SD_pal)+1)
-Plot_M_Map(M = Avg_SD_M_df, NOAA = NOAA, colname = "SD", filepath = fig_spec_path, 
-  filename = "M_Med_SD_Map.png", title_text = "SD", palette = SD_pal, palette_breaks = SD_pal_breaks )
-
-# TODO: may need to add key, and axes; may need to switch to converting objects to lat/long (change function.)
-
-# other plots ---------------------------------------------------------------
-
-# Think of other ways to plot mortality (any way to synthesize in the paper?)---
-# Individual plots take up a lot of space! Perhaps there is a better way to show
-# them? (or: maybe just show a few key M comparison plots (include the rest in 
-# an online supplement, and just show results of the dfa?))
-
-#OR, maybe make a plot like the dfa input, but separate by region? This would 
-#reduce the number of plots, but it may be difficult to see for other regions.
-#OR, perhaps if the main take home is the DFA, maybe it doesn't matter to show
-#the absolute plots, and just showing the standardized M plot and the 
-#Mean/sd over years by region will do..... think more about this!! 
-
