@@ -48,14 +48,14 @@ n_trends <- purrr::map(mod_list, "states") %>%
 # Plot the trends and loadings from a DFA model.
 # formals are:
 # dfa_mod, an estimated MARSS dfa model.
-# file name, file path and name (ending in .png) where the file should be stored
+# file name, file path and name (ending in .pdf) where the file should be stored
 # minZ, the minimum magnitued of a factor loading to plot 
 # lab_names, a character vector of names for the loadings
 # varimax, a single logical value. True if the trends and factors should be
   # rotated using the varimax rotation,false if it should be ploted as estimated 
   # in the model.
 
-Plot_Trends_and_Loadings <- function(dfa_mod, file_name = "DFA_Trends_Loadings_Varimax.png",
+Plot_Trends_and_Loadings <- function(dfa_mod, file_name = "DFA_Trends_Loadings_Varimax.pdf",
   minZ = 0.2, lab_names = NULL, varimax = T){
   require(MARSS)
   # Get the DFA data.
@@ -93,7 +93,7 @@ Plot_Trends_and_Loadings <- function(dfa_mod, file_name = "DFA_Trends_Loadings_V
   } else {
     xlbl_trends <- lab_names
   }
-  png(file_name, res =300, width = 12, height = 8, units = "in")
+  pdf(file_name, width = 12, height = 8)
   layout(matrix(c(1, 2, 3, 4, 5, 6), n_trends, 2), widths = c(1.2, 1))
   ## par(mfcol=c(mm,2), mai=c(0.5,0.5,0.5,0.1), omi=c(0,0,0,0))
   par(mai = c(0.7, 0.8, 0.5, 0.1), oma = c(2, 2, 0, 0))
@@ -140,11 +140,11 @@ Plot_Trends_and_Loadings <- function(dfa_mod, file_name = "DFA_Trends_Loadings_V
 
 # apply to the selected model (note: will not work if the selected model is over 3 trends)
 Plot_Trends_and_Loadings(dfa_mod = sel_dfa_mod, 
-                         file_name = paste0(fig_spec_path, "/selected_mod_trends_loadings.png"), 
+                         file_name = paste0(fig_spec_path, "/selected_mod_trends_loadings.pdf"), 
                          minZ = 0, 
                         varimax = T)
 # # apply to all of the models (does not work for over 3 trends)
-filenames_tl <- paste0(fig_spec_path,"/ntrends_", n_trends, "_diag_equal_mod_trends_loadings.png")
+filenames_tl <- paste0(fig_spec_path,"/ntrends_", n_trends, "_diag_equal_mod_trends_loadings.pdf")
 purrr::map2(mod_list[-4], filenames_tl[-4], Plot_Trends_and_Loadings, minZ = 0, varimax = T)
 
 # Get diagnostic plots ---------------------------------------------------------
@@ -152,10 +152,10 @@ purrr::map2(mod_list[-4], filenames_tl[-4], Plot_Trends_and_Loadings, minZ = 0, 
 Get_Diag_Plot <- function(dfa_mod, file_name) {
   require(MARSS)
   plot(dfa_mod, plot.type = "observations") + theme_classic()
-  ggsave(file_name, device = "png", width = 10, height = 7.5, units = "in")
+  ggsave(file_name, device = "pdf", width = 10, height = 7.5)
 }
 #apply to all of the models
-filenames <- paste0(fig_spec_path,"/ntrends_", n_trends, "_diag_equal_mod_fits.png")
+filenames <- paste0(fig_spec_path,"/ntrends_", n_trends, "_diag_equal_mod_fits.pdf")
 purrr::map2(mod_list, filenames, Get_Diag_Plot)
 
 # Plot loadings against one another for the 2 trend model ----------------------
@@ -179,20 +179,22 @@ if(dim(Z_est)[2]==2){ # only run this code if the selected model has 2 loadings.
     levels = unique(regions$Region_name))
   # plot loadings
   with(Z_est_df, plot(load_1, load_2))
-  pal <- RColorBrewer::brewer.pal(n = 9, name = "YlOrRd")
-  pal <- pal[3:9]
+  
+  # assign the color palette
+  pal <- RColorBrewer::brewer.pal(n = length(unique(Z_est_df$Region_name_fac))+2, name = "Greys")
+  pal <- pal[c(-1,-2)] # don't use the first 2 colors, too light.
   
   ggplot(data = Z_est_df, aes(x = load_1, y = load_2))+
     geom_hline(yintercept =0, color = "gray70")+
     geom_vline(xintercept = 0, color = "gray70")+
-    geom_text(aes(label = NOAA_code, color = Region_name_fac))+
+    geom_text(aes(label = NOAA_code, color = Region_name_fac), size = 5)+
     scale_color_manual(values = pal, name = "Region")+
     xlab("Loadings on Trend 1")+
     ylab("Loadings on Trend 2")+
     labs(fill="Region") +
     theme_classic(base_size = 18)+
     coord_equal()
-  ggsave(paste0(fig_spec_path, "/loadings_2_trend_scatter.png"),device = "png" , width = 9, height = 6.5)
+  ggsave(paste0(fig_spec_path, "/loadings_2_trend_scatter.pdf"),device = "pdf" , width = 9, height = 6.5)
   
   pal_qual <- RColorBrewer::brewer.pal(n = 7, name = "Dark2")
   ggplot(data = Z_est_df, aes(x = load_1, y = load_2))+
@@ -205,6 +207,6 @@ if(dim(Z_est)[2]==2){ # only run this code if the selected model has 2 loadings.
     labs(fill="Region") +
     theme_classic(base_size = 18)+
     coord_equal()
-  ggsave(paste0(fig_spec_path, "/loadings_2_trend_scatter_qualitative_col.png"),device = "png" , width = 9, height = 6.5)
+  ggsave(paste0(fig_spec_path, "/loadings_2_trend_scatter_qualitative_col.pdf"),device = "pdf" , width = 9, height = 6.5)
 }
 
