@@ -94,7 +94,8 @@ ggsave(paste0(fig_spec_path, "/d_dist_mods.png"), device = "png", width = 6, hei
 # Find difference from base model (median? )- unless there is a better way to do this
 d_base <- filter(d, Model == "Base")
 d <-  d %>% 
-        mutate(d_diff = X50. - d_base$X50.)
+        mutate(d_diff = X50. - d_base$X50.) %>%
+        mutate(percent_d_diff = 100*d_diff/d_base$X50.) #Calculate percent difference.
 # look at the fractions disarticulating implied from the models. 
 d <- d %>% 
   mutate(frac_disart = 1-exp(-X50.)) # not that differnet (for now)
