@@ -7,7 +7,8 @@
 # Script based on https://nwfsc-timeseries.github.io/atsa-labs/sec-dfa-fitting-dfa-models-with-marss.html
 # SS resid/SSobs is as in Zuur et al. 2003 and Peterson et al. 2017.
 # 
-# TODO: continue editing this script!
+# TODO: Get dat_wide from model output itself rather than a 
+# separate file 
 # 
 # Written by Kathryn Doering on 17 Jan 2019
 # 
@@ -33,11 +34,10 @@ regions <-  read.csv("./Data/Doering_Thesis_Regions_3.csv")
 # name folders
 der_dat_gen_path <- "./Derived_Data/3_DFA_Base_Mod"
 der_dat_spec_path <- paste0(der_dat_gen_path, "/2_select_mod")
-fig_gen_path <- "./Figs/3_DFA_Base_Mod"
-fig_spec_path <- paste0(fig_gen_path, "/2_select_mod")
+
 #create folders
+dir.create(der_dat_gen_path) #should exist already
 dir.create(der_dat_spec_path)
-dir.create(fig_spec_path)
 
 # Print model summaries --------------------------------------------------------
 

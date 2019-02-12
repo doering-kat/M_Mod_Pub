@@ -28,9 +28,9 @@ fig_gen_path <- "./Figs/2_Base_Mod_Run"
 fig_spec_path <- paste0(fig_gen_path, "/7_calc_resid_boxes")
 # make the folders
 #uncomment *gen_path lines if need to create the general path as well.
-#dir.create(der_dat_gen_path)
+dir.create(der_dat_gen_path) # should already exist
 dir.create(der_dat_spec_path)
-#dir.create(fig_gen_path)
+dir.create(fig_gen_path) # should already exist.
 dir.create(fig_spec_path)
 
 # Calculate residual boxes -----------------------------------------------------

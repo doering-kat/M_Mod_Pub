@@ -117,12 +117,10 @@ dev.off()
 # plot all the code together.
 # Alpha is used to add transparency; darker portions are where lines overlay each other,
 # Where as single lines are shown in gray. 
-# must use png, bmp, or jpeg for trancparency to show up
-# 
 # Plot_All function: plot all the data in dat_mat on the same plot, overlapping.
 # formals are:
 # dat_mat: numeric data to plot in a matrix where rows are NOAACOdes and cols are years
-# file_name: a string with .png extension specifying the name and file path where
+# file_name: a string with .pdf extension specifying the name and file path where
 #   the plot wil be saved.
 # ylab: text for the y axis of the plot (a character single value.)
 # returns: NA

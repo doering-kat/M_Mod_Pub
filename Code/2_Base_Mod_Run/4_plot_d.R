@@ -4,6 +4,7 @@
 # Plot relative to prior.
 # 
 # Written 18 Jan 2019 by Kathryn Doering
+
 # TODO:
 # Check code (including function and formatting.)
 # Clear global env--------------------------------------------------------------

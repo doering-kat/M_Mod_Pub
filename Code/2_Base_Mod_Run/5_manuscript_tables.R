@@ -17,13 +17,9 @@ regions <- read.csv("./Data/Doering_Thesis_Regions_3.csv")
 der_dat_gen_path <- "./Derived_Data/2_Base_Mod_Run"
 # subfolder for this script:
 der_dat_spec_path <- paste0(der_dat_gen_path, "/5_manuscript_tables")
-fig_gen_path <- "./Figs/2_Base_Mod_Run"
-fig_spec_path <- paste0(fig_gen_path, "/5_manuscript_tables")
 # make the folders
-dir.create(der_dat_gen_path)
+dir.create(der_dat_gen_path) # should already exist
 dir.create(der_dat_spec_path)
-dir.create(fig_gen_path)
-dir.create(fig_spec_path)
 
 # Table of number of bars by region  -------------------------------------------
 nbars <- bar_reg_key %>% 

@@ -37,7 +37,9 @@ der_dat_spec_path <- paste0(der_dat_gen_path, "/8_plot_M_map_lat_long")
 fig_gen_path <- "./Figs/2_Base_Mod_Run"
 fig_spec_path <- paste0(fig_gen_path, "/8_plot_M_map_lat_long")
 # make the folders (gen folders should already exist)
+dir.create(der_dat_gen_path)
 dir.create(der_dat_spec_path)
+dir.create(der_dat_gen_path)
 dir.create(fig_spec_path) 
 
 # Manipulate M_dat -------------------------------------------------------------
@@ -152,7 +154,8 @@ saved_plot <-   Plot_M_Map_latlon(M = tmp_M, NOAA = NOAA_latlon, colname = "M_an
     title_text = as.character(y))
 # to change the color of the unmodeled plots, will need to use this and resave the 
 #plot.
-#saved_plot <- saved_plot + latticeExtra::layer_(sp.polygons(NOAA_latlon,fill='gray70')) # fill in other NOAA codes with gray.
+#saved_plot <- saved_plot + latticeExtra::layer_(sp.polygons(NOAA_latlon,fill='gray70')) # fill in other NOAA codes with gray..
+# Now, export saved_plot as a pdf to save with other fill.
 }
 
 # Make the avg and sd plots ----------------------------------------------------
@@ -179,5 +182,5 @@ Plot_M_Map_latlon(M = Avg_SD_M_df, NOAA = NOAA_latlon, colname = "SD", filepath 
 
 
 # Save the data ----------------------------------------------------------------
-write.csv(M_map_df, paste0(der_dat_spec_path, "M_annnual_map_df.csv"))
-write.csv(Avg_SD_M_df, paste0(der_dat_spec_path, "Avg_SD_M_annual_df.csv"))
+write.csv(M_map_df, paste0(der_dat_spec_path, "/M_annnual_map_df.csv"))
+write.csv(Avg_SD_M_df, paste0(der_dat_spec_path, "/Avg_SD_M_annual_df.csv"))

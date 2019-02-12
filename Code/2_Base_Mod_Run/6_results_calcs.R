@@ -93,7 +93,7 @@ sink()
 
 sink(paste0(der_dat_spec_path, "/model_box_cnt_compare.txt"))
 # overall average
-print("The model results were on average this much higher (annual M) than the\nbox count method during 1991-2017 (neg values signify the model results were lower than the box count):")
+print("The model results were on average this much higher (annual M) than the\nbox count method during all model years (neg values signify the model results were lower than the box count):")
 M_summary %>% 
   mutate(Diff = X50. - BoxCount) %>% 
   summarize(Avg_diff = mean(Diff))

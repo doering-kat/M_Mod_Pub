@@ -16,8 +16,6 @@ options(stringsAsFactors = F)
 # Load Data --------------------------------------------------------------------
 #Load model and data associated with it:
 run_mod_path <- "./Derived_Data/2_Base_Mod_Run/1_run_mod"
-# bar_reg_key <- read.csv(paste0(run_mod_path, "/bar_reg_key.csv"))
-# raw_mod_dat <- read.csv(paste0("./models_and_derived_data/", folder_name, "/raw_dat.csv"))
 
 mod <- readRDS(file = paste0(run_mod_path, "/model.rda"))
 mod_dat <- readRDS(file = paste0(run_mod_path, "/model_dat.rda"))
@@ -31,11 +29,9 @@ NOAA_vec <- NOAA_vec$x
 der_dat_gen_path <- "./Derived_Data/2_Base_Mod_Run"
 # subfolder for this script:
 der_dat_spec_path <- paste0(der_dat_gen_path, "/2_check_convergence")
-# fig_gen_path <- "./Figs/2_Base_Mod_Run"
-# fig_spec_path <- paste0(fig_gen_path, "/2_check_convergence")
 # make the folders (gen folders should already exist)
+dir.create(der_dat_gen_path)
 dir.create(der_dat_spec_path)
-# dir.create(fig_spec_path) 
 
 # Elapsed time -----------------------------------------------------------------
 # #see how long sampling took

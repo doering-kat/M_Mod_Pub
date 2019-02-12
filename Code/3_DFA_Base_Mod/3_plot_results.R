@@ -26,12 +26,10 @@ regions <-  read.csv("./Data/Doering_Thesis_Regions_3.csv")
 # name and create folders to store results -------------------------------------
 
 # name folders
-der_dat_gen_path <- "./Derived_Data/3_DFA_Base_Mod"
-der_dat_spec_path <- paste0(der_dat_gen_path, "/3_plot_results")
 fig_gen_path <- "./Figs/3_DFA_Base_Mod"
 fig_spec_path <- paste0(fig_gen_path, "/3_plot_results")
 #create folders
-dir.create(der_dat_spec_path)
+dir.create(fig_gen_path) # should already exist
 dir.create(fig_spec_path)
 
 # # Get information from models --------------------------------------------------
