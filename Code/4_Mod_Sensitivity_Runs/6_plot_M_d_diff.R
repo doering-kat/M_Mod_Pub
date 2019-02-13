@@ -39,20 +39,23 @@ der_dat_spec_path <- paste0(der_dat_gen_path, "/6_plot_M_d_diff")
 # for figures
 fig_gen_path <- "./Figs/4_Mod_Sensitivity_Runs"
 fig_spec_path <- paste0(fig_gen_path, "/6_plot_M_d_diff")
-# make the folders (gen folders should already exist)
+# make the folders 
+dir.create(der_dat_gen_path) # should already exist
 dir.create(der_dat_spec_path)
+dir.create(fig_gen_path)
 dir.create(fig_spec_path)
 
 # Manipulate model summaries ---------------------------------------------------
 
-#convert model reruns to a dataframe
+#convert model rerun summaries to a dataframe
 mods_rerun_sum_df <- purrr::map2_dfr(mods_rerun_sum, mod_rerun_names, ~mutate(.x, Model = .y))
 
 # Replace intial model runs with the reruns.
+# delete intial model runs
 final_mod_sum <- mod_sum %>% 
                   filter(Model != mod_rerun_names[1]) %>% 
                   filter(Model != mod_rerun_names[2])
-# change column order to match and delete X col to match with rerun.
+# change column order to match and delete X col to match col names with mod_rerun_sum_df cols.
 final_mod_sum <- final_mod_sum %>% 
                    select(-X) %>% 
                    select(param, mean:Rhat, Model)
@@ -69,6 +72,8 @@ sum_nested <- final_mod_sum %>%
                 nest()
 
 # Calc diff for d --------------------------------------------------------------
+# Find how different d is from the base  model. 
+
 # Start by plotting the d = on the same plot.
 d <- final_mod_sum %>% 
       mutate(param_1 = substr(param, 1, 1)) %>% 

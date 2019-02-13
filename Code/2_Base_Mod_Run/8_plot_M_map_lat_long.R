@@ -14,6 +14,7 @@ library(sp)
 library(RColorBrewer)
 library(grid)
 library(latticeExtra)
+library(gridExtra)
 #Another option: using the maps package.
 options(stringsAsFactors = F) #Change options.
 
@@ -144,20 +145,24 @@ Plot_M_Map_latlon <- function(M, colname = "M_Annual" , NOAA, lab = F, NOAAlab =
   return(plot)
 }
 
-# Make the by year plots ---------------------------------------------------------------
+# Make the by year plots -------------------------------------------------------
 # Run plot function to get maps of M by year.
+maps <- vector("list", length(1991:2017))
+cnt <- 1
 for (y in 1991:2017) {
   tmp_M <- dplyr::filter(M_map_df, Year == y) # just M for the year.
   # define the color brewer palette.name))
-saved_plot <-   Plot_M_Map_latlon(M = tmp_M, NOAA = NOAA_latlon, colname = "M_annual", 
+maps[[cnt]] <-   Plot_M_Map_latlon(M = tmp_M, NOAA = NOAA_latlon, colname = "M_annual", 
     filepath = fig_spec_path,axes = T,axes_lab = T, filename = paste0("M_", y, ".pdf"), 
     title_text = as.character(y))
+cnt <- cnt + 1
 # to change the color of the unmodeled plots, will need to use this and resave the 
 #plot.
 #saved_plot <- saved_plot + latticeExtra::layer_(sp.polygons(NOAA_latlon,fill='gray70')) # fill in other NOAA codes with gray..
 # Now, export saved_plot as a pdf to save with other fill.
 }
-
+# TODO: use maps object to make plots all together.
+# 
 # Make the avg and sd plots ----------------------------------------------------
 # Calculate mean and sd of median values by NOAA code
 Avg_SD_M_df <- M_map_df %>% 

@@ -35,12 +35,12 @@ der_dat_gen_path <- "./Derived_Data/4_Mod_Sensitivity_Runs"
 # subfolder for this script:
 der_dat_spec_path <- paste0(der_dat_gen_path, "/1_run_mods")
 fig_gen_path <- "./Figs/4_Mod_Sensitivity_Runs"
-fig_spec_path <- paste0(fig_gen_path, "/1_run_mods")
+# do not need a fig folder for this script.
 # make the folders
 dir.create(der_dat_gen_path)
 dir.create(der_dat_spec_path)
 dir.create(fig_gen_path)
-dir.create(fig_spec_path)
+
 
 # Load Data ---------------------------------------------------------------------
 
@@ -79,10 +79,6 @@ all_dat_ts <- SelectData(
                          remove_0 = FALSE,
                          n_ts = n_ts #min number of bars with complete time series required. 
                         )
-
-# Make diagnostic plots (note: takes ~ 30 s to run)
-# Should be the same as for base run, so no need.
-# PlotData(all_dat_ts = all_dat_ts, file_path = fig_spec_path, file_name = "Data_Plots.pdf")
 
 #Get data sets to run the model as well as use for plotting later
 # differs among mod runs. 

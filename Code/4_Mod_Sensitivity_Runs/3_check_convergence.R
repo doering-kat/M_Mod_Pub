@@ -15,10 +15,9 @@ options(stringsAsFactors = F)
 
 # Load Data --------------------------------------------------------------------
 # Load model summaries (in a single .csv file)
-
 mod_summary <- read.csv("./Derived_Data/4_Mod_Sensitivity_Runs/2_get_mod_summaries/all_mod_summary.csv")
-# NOTE: models are loaded later in the script. this is because they are large and
-# therefore will be removed from the workspace immediately after using.
+# NOTE: models are loaded later in the script (in check divergent samples. 
+# this is because they are large and therefore will be removed from the workspace immediately after using.
 run_mod_path <- "./Derived_Data/4_Mod_Sensitivity_Runs/1_run_mods"
 sens_runs_pars <- read.csv(paste0(run_mod_path, "/sense_runs_pars.csv"))
 
@@ -28,12 +27,10 @@ sens_runs_pars <- read.csv(paste0(run_mod_path, "/sense_runs_pars.csv"))
 der_dat_gen_path <- "./Derived_Data/4_Mod_Sensitivity_Runs"
 # subfolder for this script:
 der_dat_spec_path <- paste0(der_dat_gen_path, "/3_check_convergence")
-# no need to make a figures folder, but can uncomment if desired.
-# fig_gen_path <- "./Figs/4_Mod_Sensitivity_Runs"
-# fig_spec_path <- paste0(fig_gen_path, "/3_check_convergence")
-# make the folders (gen folders should already exist)
+# no need to make a figures folder
+dir.create(der_dat_gen_path) # should already exist
 dir.create(der_dat_spec_path)
-# dir.create(fig_spec_path) 
+
 
 # Check for sufficient r hat and effective sample size -------------------------
 # Check effective sampel size

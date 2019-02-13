@@ -38,12 +38,10 @@ names(mods_sum) <- mod_names
 der_dat_gen_path <- "./Derived_Data/4_Mod_Sensitivity_Runs"
 # subfolder for this script:
 der_dat_spec_path <- paste0(der_dat_gen_path, "/5_check_conv_rerun_mods")
-# no need to make a figures folder, but can uncomment if desired.
-# fig_gen_path <- "./Figs/4_Mod_Sensitivity_Runs"
-# fig_spec_path <- paste0(fig_gen_path, "/5_check_conv_rerun_mods")
+# no need to make a figures folder
 # make the folders (gen folders should already exist)
 dir.create(der_dat_spec_path)
-# dir.create(fig_spec_path) 
+dir.create(der_dat_spec_path)
 
 # Check for divergent samples --------------------------------------------------
 # Use models
@@ -55,7 +53,7 @@ div_samp_df <- purrr::map2_dfr(div_samples_by_chain, names(div_samples_by_chain)
 # write to a file
 write.csv(div_samp_df, paste0(der_dat_spec_path, "/n_divergent_samples_by_chain.csv"))
 
-# Check for effective sample size, rhat ----------------------------------------
+# Check for effective sample size ---------------------------------------------
 # 
 # Check effective sampel size
 # Want all parameters to have effective sample sizes (neff) >1000
@@ -66,7 +64,7 @@ write.csv(less_1000_df, paste0(der_dat_spec_path, "/less_1000_neff.csv"))
 
 #remove the models (no longer need)
 rm(mods)
-# Check Rhat
+# Check Rhat ------------------------------------------------------------------
 # put all rhat values in a vector and check (fix this)
 lg_rhat <- purrr::map(mods_sum, ~.x[.x$Rhat>1.1, ])  # mod_summary[mod_summary$n_eff <1000, ]
 lg_rhat_df <- purrr::map2_dfr(lg_rhat, names(lg_rhat), ~mutate(.x, Model = .y)) 

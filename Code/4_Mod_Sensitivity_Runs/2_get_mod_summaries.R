@@ -21,6 +21,7 @@ options(stringsAsFactors = F)
 # Load Data --------------------------------------------------------------------
 #Load model and data associated with it: for all runs.
 run_mod_path <- "./Derived_Data/4_Mod_Sensitivity_Runs/1_run_mods"
+# load the parameters changed from base model for each sensitivity run, in sens_runs_pars.
 sens_runs_pars <- read.csv(paste0(run_mod_path, "/sense_runs_pars.csv"))
 # Load models (note: model files are really big, so may need to load one at a time instead!)
 file_names <- paste0(run_mod_path,"/R_eff_", round(sens_runs_pars$R_eff, 2), "_frac_d_prev_", 
@@ -33,9 +34,8 @@ base_mod <- readRDS("./Derived_Data/2_Base_Mod_Run/1_run_mod/model.rda")
 der_dat_gen_path <- "./Derived_Data/4_Mod_Sensitivity_Runs"
 # subfolder for this script:
 der_dat_spec_path <- paste0(der_dat_gen_path, "/2_get_mod_summaries")
-
+dir.create(der_dat_gen_path) # should already exist, though
 dir.create(der_dat_spec_path)
-# dir.create(fig_spec_path) 
 
 # Get summaries and write to file ----------------------------------------------
 

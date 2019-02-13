@@ -29,14 +29,10 @@ source("./Code/Funs/M_Mod_1_output_funs.R", echo = F)
 der_dat_gen_path <- "./Derived_Data/4_Mod_Sensitivity_Runs"
 # subfolder for this script:
 der_dat_spec_path <- paste0(der_dat_gen_path, "/4_rerun_mods")
-# did not create any figures, so commented out figure folders.
-# fig_gen_path <- "./Figs/4_Mod_Sensitivity_Runs"
-# fig_spec_path <- paste0(fig_gen_path, "/4_rerun_mods")
+# do not make any figures.
 # make the folders
-dir.create(der_dat_gen_path)
+dir.create(der_dat_gen_path) # should already exist
 dir.create(der_dat_spec_path)
-# dir.create(fig_gen_path)
-# dir.create(fig_spec_path)
 
 # Load Data ---------------------------------------------------------------------
 
