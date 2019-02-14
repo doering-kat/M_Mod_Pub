@@ -1,11 +1,7 @@
 # Header -----------------------------------------------------------------------
 # Get the varimax rotation trends and loadings from DFA and save.
 # 
-# Written 29 Jan 2019 by Kathryn Doering
-
-# clear global env -------------------------------------------------------------
-rm(list = ls())
-
+# Written by Kathryn Doering
 # Load packages, set options ---------------------------------------------------
 library(MARSS)
 library(tidyverse)

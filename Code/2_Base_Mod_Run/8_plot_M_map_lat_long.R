@@ -1,11 +1,7 @@
 # Header -----------------------------------------------------------------------
 # Plot M on a map, using lat and longitude
 # Make these into pdf objects that could be used in a paper.
-# Written 5 Feb 2019 by Kathryn Doering
-# 
-# Clear global env--------------------------------------------------------------
-rm(list = ls())
-
+# Written by Kathryn Doering
 # Load packages ----------------------------------------------------------------
 library(tidyverse)
 library(rstan)
@@ -17,9 +13,6 @@ library(latticeExtra)
 library(gridExtra)
 #Another option: using the maps package.
 options(stringsAsFactors = F) #Change options.
-
-#Functions to use:  (NEED?)
-#source('./Code/Extract_and_plot_functions.R')
 
 # Load data ---------------------------------------------------------------------
 # Natural mortality model and box count estimates

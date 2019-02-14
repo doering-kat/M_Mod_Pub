@@ -9,10 +9,7 @@
 # distribution used for the prior (calculated in an excel document);
 # These are 0.49 and 5.09, respectively. 
 # 
-# Written 24 Jan 2019 by KD
-# # Clear global env--------------------------------------------------------------
-rm(list = ls())
-
+# Written by KD
 # Load Packages and set options ------------------------------------------------
 # packages
 library(tidyverse)

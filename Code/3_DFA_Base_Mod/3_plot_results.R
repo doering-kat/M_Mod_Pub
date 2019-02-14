@@ -2,14 +2,10 @@
 # Make plots using the selected model for DFA.
 # Make fit plots, and plot trends and loadings
 # 
-# Written 23 Jan 2019 by Kathryn Doering
+# Written by Kathryn Doering
 # 
 # TODO: Add scatter plot for 2 trend model, but with average salinity?
 # 
-# clear global env -------------------------------------------------------------
-
-rm(list = ls())
-
 # Load packages, set options ---------------------------------------------------
 
 library(tidyverse)

@@ -2,10 +2,7 @@
 # 
 # Compare M from Bayesian model with the SA model results.
 # 
-# Written 4 Feb 2019 by Kathryn Doering
-# clear global env -------------------------------------------------------------
-rm(list = ls())
-
+# Written by Kathryn Doering
 # Load packages and set options ------------------------------------------------
 library(MARSS)
 library(tidyverse)

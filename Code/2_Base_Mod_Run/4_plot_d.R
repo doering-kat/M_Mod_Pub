@@ -7,9 +7,6 @@
 
 # TODO:
 # Check code (including function and formatting.)
-# Clear global env--------------------------------------------------------------
-
-rm(list = ls())
 
 # Load packages ----------------------------------------------------------------
 library(tidyverse)

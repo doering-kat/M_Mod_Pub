@@ -8,9 +8,8 @@
 
 # This will be used as input for the Bayesian natural mortality model.
 
-# Created 9 Jan 2019 by Kathryn Doering based on code by Marvin Mace III
-# Clear global env--------------------------------------------------------------
-rm(list = ls())
+# Created  by Kathryn Doering based on code by Marvin Mace III
+
 # Load Packages and set options ------------------------------------------------
 
 library(tidyverse)

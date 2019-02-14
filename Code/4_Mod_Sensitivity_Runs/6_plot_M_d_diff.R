@@ -3,10 +3,7 @@
 # include the model reruns for the models for which it was necessary.
 
 # Look at how M changes among models and d
-# Written 25 Jan 2019 by Kathryn Doering 
-
-# Clear global env -------------------------------------------------------------
-rm(list = ls())
+# Written by Kathryn Doering
 
 # Load packages, set options ---------------------------------------------------
 library(tidyverse)

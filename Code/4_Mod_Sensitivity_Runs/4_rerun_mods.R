@@ -1,12 +1,10 @@
 # Header -----------------------------------------------------------------------
 # Rerun sensitivity models that had problems in the first run.
-# Written 28 Jan 2019 by Kathryn Doering
+# Written by Kathryn Doering
 # 
 # Two models had problems running, so they need to be rerun.
 # Try to diagnose sampling problems before with a subset of data first
 # Both do similar things, so problem shoot by running only 1 of the models.
-# Clear global env--------------------------------------------------------------
-rm(list = ls())
 
 # Load Packages and set options ------------------------------------------------
 # packages

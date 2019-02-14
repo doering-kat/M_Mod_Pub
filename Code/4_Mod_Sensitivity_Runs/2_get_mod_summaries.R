@@ -10,10 +10,8 @@
 # TODO: make model summary just for M as well. get the model region and year, use
 # the bar reg key to change to NOAA codes and years, and write to a .csv.
 # 
-# Written 24 Jan 2019 by Kathryn Doering
+# Written by Kathryn Doering
 # 
-# Clear global env--------------------------------------------------------------
-rm(list = ls())
 # Load Packages and set options ------------------------------------------------
 library(tidyverse)
 library(rstan)

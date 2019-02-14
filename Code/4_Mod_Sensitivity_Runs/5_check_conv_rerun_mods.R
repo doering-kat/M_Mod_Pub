@@ -4,10 +4,7 @@
 # Note that this is hard coded, because it was created specifically to deal with
 # sampling issues for the particular dataset and models used
 # 
-# Written 1 Feb 2019 by Kathryn Doering
-
-# Clear global env--------------------------------------------------------------
-rm(list = ls())
+# Written by Kathryn Doering
 
 # Load Packages and set options ------------------------------------------------
 library(tidyverse)

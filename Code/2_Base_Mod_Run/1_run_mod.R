@@ -10,9 +10,6 @@
 # for the difference in efficiency between boxes and live oysters
 # 
 # Written 9 Jan 2019 by Kathryn Doering
-# 
-# Clear global env--------------------------------------------------------------
-rm(list = ls())
 
 # Load Packages and set options ------------------------------------------------
 # packages

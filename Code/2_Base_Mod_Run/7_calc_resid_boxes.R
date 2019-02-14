@@ -5,10 +5,7 @@
 #
 # This is used in the discussion section
 # 
-# Written 4 Feb 2019 by Kathryn Doering 
-# clear global env -------------------------------------------------------------
-rm(list = ls())
-
+# Written by Kathryn Doering 
 # Load packages, set options ---------------------------------------------------
 library(rstan)
 library(tidyverse)

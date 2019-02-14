@@ -10,12 +10,8 @@
 # TODO: Get dat_wide from model output itself rather than a 
 # separate file 
 # 
-# Written by Kathryn Doering on 17 Jan 2019
+# Written by Kathryn Doering
 # 
-# clear global env -------------------------------------------------------------
-
-rm(list = ls())
-
 # Load packages, set options ---------------------------------------------------
 
 library(tidyverse)

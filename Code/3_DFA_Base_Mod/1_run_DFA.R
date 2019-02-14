@@ -11,12 +11,8 @@
 # 
 # Script based on https://nwfsc-timeseries.github.io/atsa-labs/sec-dfa-fitting-dfa-models-with-marss.html
 # 
-# Written by Kathryn Doering on 17 Jan 2019
+# Written by Kathryn Doering
 # 
-# Clear global env -------------------------------------------------------------
-
-rm(list = ls())
-
 # Load packages, set options ---------------------------------------------------
 
 library(tidyverse)

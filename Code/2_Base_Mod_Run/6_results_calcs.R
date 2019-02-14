@@ -4,12 +4,8 @@
 # This will include values in the manuscript for estimates. Used to compare regions
 # throughout the results section.
 # 
-# Written by Kathryn Doering, 28 Jan 2019
+# Written by Kathryn Doering
 # 
-# Clear global env--------------------------------------------------------------
-
-rm(list = ls())
-
 # load packages, set options ---------------------------------------------------
 library(tidyverse)
 library(corrplot)

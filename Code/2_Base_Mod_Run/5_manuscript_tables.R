@@ -1,8 +1,7 @@
 # Header -----------------------------------------------------------------------
 
 # Create tables for manuscipt (paper and supplemental)
-# Clear global env--------------------------------------------------------------
-rm(list = ls())
+
 # load packages, set options ---------------------------------------------------
 library(tidyverse)
 options(stringsAsFactors = F)

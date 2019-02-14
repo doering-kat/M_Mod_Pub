@@ -3,10 +3,7 @@
 # Check model convergence by looking at rhat values and if there were any divergent
 # transitions. Also, check the effective sample sizes of the parameters.
 # 
-# Written 24 Jan 2019 by Kathryn Doering
-
-# Clear global env--------------------------------------------------------------
-rm(list = ls())
+# Written by Kathryn Doering
 
 # Load Packages and set options ------------------------------------------------
 library(tidyverse)
