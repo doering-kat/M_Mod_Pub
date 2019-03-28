@@ -5,13 +5,8 @@
 # Load packages ----------------------------------------------------------------
 library(tidyverse)
 library(rstan)
-library(cowplot)
 library(sp)
 library(RColorBrewer)
-library(grid)
-library(latticeExtra)
-library(gridExtra)
-#Another option: using the maps package.
 options(stringsAsFactors = F) #Change options.
 
 # Load data ---------------------------------------------------------------------
@@ -79,7 +74,6 @@ Plot_M_Map_latlon <- function(M, colname = "M_Annual" , NOAA, lab = F, NOAAlab =
   # List required packages -----------------------------------------------------
   require(RColorBrewer)
   require(sp)
-  require(grid)
   require(tidyverse)
   # Make spatialpolygondataframe -----------------------------------------------
   

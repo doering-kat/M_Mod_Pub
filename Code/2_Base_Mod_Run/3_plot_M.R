@@ -5,18 +5,10 @@
 # Written 17 Jan 2019 by Kathryn Doering
 
 # Load packages ----------------------------------------------------------------
-library(tidyverse)
+library(tidyverse) # used purrr, tidyr, ggplot2, and dplyr specifically.
 library(rstan)
 library(cowplot)
-library(sp)
-library(RColorBrewer)
-library(grid)
-library(latticeExtra)
-#Another option: using the maps package.
 options(stringsAsFactors = F) #Change options.
-
-#Functions to use:  (NEED?)
-#source('./Code/Extract_and_plot_functions.R')
 
 # Load data ---------------------------------------------------------------------
 read_path <- "./Derived_Data/2_Base_Mod_Run/1_run_mod"
@@ -33,10 +25,6 @@ NOAA_vec <- NOAA_vec$x
 #NOAA code regions
 regions <- read.csv("./Data/Doering_Thesis_Regions_3.csv")
 
-# to create maps of M data
-NOAA <- readRDS("./Data/CB_spatial_objects/NOAA_CB.rds")
-NOAAlab <- readRDS("./Data/CB_spatial_objects/NOAAlabels_CB.rds")
-
 # Set output paths and make folders --------------------------------------------
 
 # general derived data for all base model run scripts:
@@ -46,16 +34,18 @@ der_dat_spec_path <- paste0(der_dat_gen_path, "/3_plot_M")
 fig_gen_path <- "./Figs/2_Base_Mod_Run"
 fig_spec_path <- paste0(fig_gen_path, "/3_plot_M")
 # make the folders (gen folders should already exist)
+dir.create(der_dat_gen_path)
 dir.create(der_dat_spec_path)
+dir.create(fig_gen_path)
 dir.create(fig_spec_path) 
 
-# Define variables--------------------------------------------------------------
+# Define model years -----------------------------------------------------------
 # years used in the model
 yr_0 <- 1990
 yr_last <- 2017
 nyears <-  yr_last-yr_0  #number of years not including year 0.
 
-# Get M data-----------------------------------------------------------------------
+# Get M estimates --------------------------------------------------------------
 
 # Split_to_Yr_Reg:
 # Function to get te region or year indices. 
@@ -176,7 +166,7 @@ tmpnames <- arrange(M_dat, NOAA_code_fac) #order the NOAA code by factor
 tmpnames <- unique(tmpnames$NOAA_code) #this should be the same order as the ggplots
 names(plots$plot) <- tmpnames #assign these names to the plot
 
-# save the plots individually as pdf -------------------------------------------
+# Save the boxplots individually as pdf ----------------------------------------
 fig_names <- names(plots$plot)
 file_names <- paste0(fig_spec_path, "/NOAACode_", fig_names, "_M_boxplot.pdf")
 purrr::map2(file_names, plots$plot,  ggplot2::ggsave, device = "pdf",  height = 4.58, width = 6.06)
@@ -239,12 +229,15 @@ Plot_By_Region <- function(all_plots_df,
   dev.off()
 }
 
-#create the plots by broad regions( make 1 per region)
+# create the plots by broad regions( make 1 per region)
 region_names <- unique(regions$R_region) #get region names
 # use Plot_By_Region function make the plots and save.
 purrr::map(region_names, ~Plot_By_Region(R_region_name = .x, all_plots_df = plots, file_path = fig_spec_path ))
-# M by NOAA lines ---------------------------------------------------------------
-#Make axis labels
+
+# M by NOAA line plots  --------------------------------------------------------
+# These show M from the model using lines and polygons instead of boxplots.
+
+# Make axis labels
 lab <- as.character(1991:2017)
 lab[c(2,3,4,5,7,8,9,10,12,13,14,15,17,18,19,20,22,23,24,25,27)] <- "" #only label every 5. 
 
@@ -283,7 +276,7 @@ tmpnames_line <- arrange(M_dat, NOAA_code_fac) #order the NOAA code by factor
 tmpnames_line <- unique(tmpnames_line$NOAA_code) #this should be the same order as the ggplots
 names(plots_line$plot) <- tmpnames_line #assign these names to the plot
 
-# save the line plots individually as pdf --------------------------------------
+# Save the line plots individually as pdf --------------------------------------
 fig_names_line <- names(plots_line$plot)
 file_names_line <- paste0(fig_spec_path, "/NOAACode_", fig_names_line, "_M_lineplot.pdf")
 purrr::map2(file_names_line, plots_line$plot,  ggplot2::ggsave, device = "pdf",  height = 4.58, width = 6.06)

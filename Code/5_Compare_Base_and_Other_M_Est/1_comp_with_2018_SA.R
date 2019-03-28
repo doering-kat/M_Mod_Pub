@@ -4,7 +4,6 @@
 # 
 # Written by Kathryn Doering
 # Load packages and set options ------------------------------------------------
-library(MARSS)
 library(tidyverse)
 options(stringsAsFactors = F)
 save_files <- T # True if want to create new files, False if not.
