@@ -1,0 +1,3 @@
+Please not that a folder named 1_* is purposefully missing. This is because it contained scripts to manipulate a raw version
+of the fall survey data that was ultimately deemed not useful to include in the repository. You can see the output of those scripts 
+in the Derived_Data/1* folder, which includes a cleaned version of the fall survey data used in by the model.
