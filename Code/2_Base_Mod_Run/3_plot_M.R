@@ -119,8 +119,8 @@ M_dat <- left_join(M_dat, regions, by = "NOAA_code")
 #add a NOAA code factors for plotting (useful for ordering plots)
 M_dat$NOAA_code_fac <- factor(M_dat$NOAA_code, 
                               levels = regions$NOAA_code, 
-                              labels = paste0("NOAA Code ", regions$NOAA_code, ":\n", regions$NOAA_Name_Short))
- 
+                              labels = paste0("Area ", regions$NOAA_code, ":\n", regions$NOAA_Name_Short))
+
 #export as .csv
 
 write.csv(M_dat, paste0(der_dat_spec_path, "/M_dat_mod_boxcount.csv"), row.names = F)
@@ -134,6 +134,9 @@ lab[c(2,3,4,5,7,8,9,10,12,13,14,15,17,18,19,20,22,23,24,25,27)] <- "" #only labe
 # make dataframe nested, and then use map function to create ggplots by NOAA
 # code. Also added R_regions as a grouping variable, which is useful for making
 # the regional panel plots.
+# Note: There is a bug with group_by and factors in older versions of tidyr.
+# See https://github.com/tidyverse/dplyr/issues/4283
+# Using at least dplyr_0.8.0.1 and tidyr_0.8.3 should make this work.
 plots <-  M_dat %>%
   group_by(NOAA_code_fac, R_region) %>%
   nest() %>%
