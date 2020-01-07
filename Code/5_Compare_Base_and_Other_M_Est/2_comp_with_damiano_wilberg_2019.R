@@ -13,7 +13,9 @@ M_Chop_DW <- read.csv("./Data/M_Damiano_and_Wilberg_2019.csv")
 Bayes_M <-  read.csv("./Derived_Data/2_Base_Mod_Run/3_plot_M/M_dat_mod_boxcount.csv")
 # Add regions for plotting
 regions <-  read.csv("./Data/Doering_Thesis_Regions_3.csv")
-
+# parameter estimates (including q's for choptank river complex from Damiano and
+# Wilberg 2019)
+pars_Chop_DW <- read.csv("Data/par_ests_Damiano_and_Wilberg_2019.csv")
 # Specify and Create output paths ----------------------------------------------
 # general derived data for all base model run scripts:
 der_dat_gen_path <- "./Derived_Data/5_Compare_Base_and_Other_M_Est"
@@ -94,3 +96,17 @@ sink()
 # Will need to double check this analysis, and run finally. Decide how to include
 # in paper ( look at script 1 and manuscript )
 
+# use q estimates to estimate R_eff --------------------------------------------
+   R_eff <- pars_Chop_DW %>% 
+              mutate(R_eff_sm = qsm/qsmb) %>% 
+              mutate(R_eff_mk = qmk/qmkb) %>% 
+              select(LOC, qsm, qsmb, qmk, qmkb, R_eff_sm, R_eff_mk)
+R_eff_sum <- summary(c(R_eff$sm, R_eff$R_eff_mk))
+
+if(save_files == TRUE) {
+  write.csv(R_eff, file.path(der_dat_spec_path, "DW_R_eff_values.csv"))
+  sink(paste0(der_dat_spec_path, "/DW_R_eff_summary.txt"))
+  cat("summary of the R effective equivalents calculated from Damiano and Wilberg 2019\n",
+    names(R_eff_sum), "\n", R_eff_sum)
+  sink()
+}

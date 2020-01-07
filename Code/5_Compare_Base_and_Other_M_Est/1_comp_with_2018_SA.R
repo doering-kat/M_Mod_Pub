@@ -1,6 +1,7 @@
 # Header -----------------------------------------------------------------------
 # 
 # Compare M from Bayesian model with the SA model results.
+# Also get info about "R_eff" from SA model results.
 # 
 # Written by Kathryn Doering
 # Load packages and set options ------------------------------------------------
@@ -140,4 +141,28 @@ if(save_files==T){
 # save the comparison-----------------------------------------------------------
 if(save_files == T){
   write.csv(Bayes_SA_M, paste0(der_dat_spec_path, "/Bayes_SA_M_comparison.csv"))
+}
+
+# compare estimates of efficiency ratio ----------------------------------------
+# get from SA_mod_dat
+log_q_est <- filter(SA_mod_dat, Name == "log_q")
+log_q_est$stage <- c("Spat", "Adult_Live", "Adult_Box") # verified order in model
+
+R_eff_SA <- log_q_est %>%
+              filter(stage != "Spat") %>% 
+              mutate(Nominal_Estimate = exp(Estimate)) %>%  # convert from log scale
+              select(Name, NOAACode, stage, Nominal_Estimate) %>%
+              spread(stage, Nominal_Estimate) %>%
+  #is the ratio of the efficiency of live oysters to the efficiency of boxes 
+              mutate(R_eff = Adult_Live/Adult_Box)
+# plot to examine
+hist(R_eff_SA$R_eff)
+plot(R_eff_SA$R_eff ~ R_eff_SA$NOAACode)
+R_eff_sum <- summary(R_eff_SA$R_eff) # more helpful to compare to Bayesian model
+
+if(save_files == T) {
+  write.csv(R_eff_SA, file.path(der_dat_spec_path, "SA_R_eff_values.csv"))
+  sink(paste0(der_dat_spec_path, "/SA_R_eff_summary.txt"))
+  cat("summary of the R effective equivalents calculated from the stock assessment ",names(R_eff_sum), "\n", R_eff_sum)
+  sink()
 }
