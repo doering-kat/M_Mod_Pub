@@ -99,10 +99,10 @@ for (i in seq_along(d_p_mean)) {
   )
   
   # Save Model results and data ------------------------------------------------
-  if(exists(mod)) {
-  saveRDS(mod, paste0(der_dat_spec_path,"/d_p_mean", round(d_p_mean[i], 2),
+  if(exists("mod")) {
+  saveRDS(mod, paste0(der_dat_spec_path,"/d_p_mean_", round(d_p_mean[i], 2),
     "_model.rda"))
-  saveRDS(mod_dat, paste0(der_dat_spec_path, "/d_p_mean", round(d_p_mean[i], 2),      
+  saveRDS(mod_dat, paste0(der_dat_spec_path, "/d_p_mean_", round(d_p_mean[i], 2),      
     "_model_dat.rda"))
   
   # delete model (to reduce obj in workspace) ----------------------------------
