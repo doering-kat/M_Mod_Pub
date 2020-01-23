@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+Docs/*
+Figs/*
+Derived_Data/[23456]*
+*.mdb
+Code/Stan_Mods/M_Mod_1.rds
+Data/DNR_Fall_survey_May_8_2018/BarInfo.csv
+Data/*.xlsx
